@@ -7,8 +7,16 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessPosition {
+    /* Implementation of permanent objects to store current position */
+    private final int row;
+    private final int column;
 
     public ChessPosition(int row, int col) {
+        if (row < 1 || row > 8 || col < 1 || col > 8) {
+            throw new IllegalArgumentException("Invalid position entered.");
+        }
+        this.row = row;
+        this.column = col;
     }
 
     /**
@@ -16,7 +24,7 @@ public class ChessPosition {
      * 1 codes for the bottom row
      */
     public int getRow() {
-        throw new RuntimeException("Not implemented");
+        return row;
     }
 
     /**
@@ -24,6 +32,14 @@ public class ChessPosition {
      * 1 codes for the left row
      */
     public int getColumn() {
-        throw new RuntimeException("Not implemented");
+        return column;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof ChessPosition)) return false;
+        ChessPosition other = (ChessPosition) obj;
+        return this.row == other.row && this.column == other.column;
     }
 }
