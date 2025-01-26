@@ -4,7 +4,7 @@ package chess;
  * Represents a single square position on a chess board
  * <p>
  * Note: You can add to this class, but you may not alter
- * signature of the existing methods.
+ * signature of the existing methods
  */
 public class ChessPosition {
     /* Implementation of permanent objects to store current position */
