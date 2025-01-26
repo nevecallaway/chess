@@ -42,4 +42,9 @@ public class ChessPosition {
         ChessPosition other = (ChessPosition) obj;
         return this.row == other.row && this.column == other.column;
     }
+
+    @Override
+    public int hashCode() {
+        return 31 * row + column;
+    }
 }
