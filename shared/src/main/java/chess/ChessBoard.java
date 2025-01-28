@@ -1,5 +1,10 @@
 package chess;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -8,8 +13,11 @@ package chess;
  */
 public class ChessBoard {
 
+    private Map<ChessPosition, ChessPiece> board;
+    //private ChessPiece[][] board1 = new ChessPiece[8][8];
+
     public ChessBoard() {
-        
+        this.board = new HashMap<>();
     }
 
     /**
@@ -19,7 +27,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        throw new RuntimeException("Not implemented");
+        board.put(position, piece);
     }
 
     /**
@@ -30,7 +38,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        throw new RuntimeException("Not implemented");
+        return board.get(position);
     }
 
     /**
@@ -38,6 +46,27 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        board.clear();
+        // Pawns
+        for (int i = 1; i <= 8; i++) {
+            board.put(new ChessPosition(2, i), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
+            board.put(new ChessPosition(7, i), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
+        }
+        // Other pieces
+        ChessPiece.PieceType[] whitePieces = {
+                ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.QUEEN,
+                ChessPiece.PieceType.KING, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK
+        };
+        ChessPiece.PieceType[] blackPieces = {
+                ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.QUEEN,
+                ChessPiece.PieceType.KING, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK
+        };
+        // Row 1/8
+        for (int i = 0; i < 8; i++) {
+            // Row 1 (White)
+            board.put(new ChessPosition(1, i + 1), new ChessPiece(ChessGame.TeamColor.WHITE, whitePieces[i]));
+            // Row 8 (Black)
+            board.put(new ChessPosition(8, i + 1), new ChessPiece(ChessGame.TeamColor.BLACK, blackPieces[i]));
+        }
     }
 }
