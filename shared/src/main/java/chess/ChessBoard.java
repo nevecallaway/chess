@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class ChessBoard {
 
-    private Map<ChessPosition, ChessPiece> board;
+    private final Map<ChessPosition, ChessPiece> board;
     //private ChessPiece[][] board1 = new ChessPiece[8][8];
 
     public ChessBoard() {
