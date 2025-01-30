@@ -45,7 +45,6 @@ public class QueenMoveCalculator implements ChessPieceMoveCalculator {
                 }
             }
         }
-
         return validMoves;
     }
 
