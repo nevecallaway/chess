@@ -49,19 +49,18 @@ public class ChessMove {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true; // Check if comparing the same object
-        if (o == null || getClass() != o.getClass()) return false; // Ensure the classes match
-        ChessMove chessMove = (ChessMove) o; // Cast 'o' to ChessMove
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessMove chessMove = (ChessMove) o;
         return startRow == chessMove.startRow &&
                 startColumn == chessMove.startColumn &&
                 endRow == chessMove.endRow &&
                 endColumn == chessMove.endColumn &&
-                Objects.equals(promotionPiece, chessMove.promotionPiece); // Compare fields
+                Objects.equals(promotionPiece, chessMove.promotionPiece);
     }
 
     @Override
     public int hashCode() {
-        // Generate a hash code using all relevant fields
         return Objects.hash(startRow, startColumn, endRow, endColumn, promotionPiece);
     }
 }
