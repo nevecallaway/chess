@@ -13,13 +13,22 @@ public class RookMovesCalculator implements ChessMovesCalculator {
         int[] colMoves = {-1, 0, 1, 0};
 
         for (int i = 0; i < 4; i++) {
+
             int row = startRow + rowMoves[i];
             int col = startCol + colMoves[i];
 
-            ChessPosition newPosition = new ChessPosition(row, col);
-            ChessPiece newPiece = board.getPiece(newPosition);
-            if (ChessPiece.validateMove(newPosition, newPiece, board.getPiece(position))) {
+            while (ChessPiece.onBoard(row, col)) {
+                ChessPosition newPosition = new ChessPosition(row, col);
+                ChessPiece newPiece = board.getPiece(newPosition);
+                if (!ChessPiece.validateMove(newPosition, newPiece, board.getPiece(position))) {
+                    break;
+                }
                 validMoves.add(new ChessMove(position, newPosition, null));
+                if (newPiece != null) {
+                    break;
+                }
+                row += rowMoves[i];
+                col += colMoves[i];
             }
         }
         return validMoves;

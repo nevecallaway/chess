@@ -64,10 +64,21 @@ public class ChessPiece {
     public static boolean validateMove(ChessPosition newPosition, ChessPiece newPiece, ChessPiece oldPiece) {
         int row = newPosition.getRow();
         int col = newPosition.getColumn();
-        return onBoard(row, col) && newPiece == null || newPiece.getTeamColor() != oldPiece.getTeamColor();
-    }
+        if (!onBoard(row, col)) {
+            return false;
+        }
 
-    private static boolean onBoard(int row, int col) {
+        return newPiece == null || newPiece.getTeamColor() != oldPiece.getTeamColor();
+    }
+//    public static boolean canCapture(ChessPiece oldPiece, ChessPiece newPiece) {
+//        if (oldPiece.getTeamColor() == newPiece.getTeamColor()) {
+//            return false;
+//        } else {
+//            return true;
+//        }
+//    }
+
+    public static boolean onBoard(int row, int col) {
         return row >= 1 && row <= 8 && col >= 1 && col <= 8;
     }
 }
