@@ -52,12 +52,22 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessMovesCalculator moves = switch (getPieceType()) {
             case KING -> new KingMovesCalculator();
-//            case ROOK -> new RookMovesCalculator();
-//            case BISHOP -> new BishopMovesCalculator();
-//            case QUEEN -> new QueenMovesCalculator();
-//            case KNIGHT -> new KnightMovesCalculator();
-//            case PAWN -> new PawnMovesCalculator();
+            case ROOK -> new RookMovesCalculator();
+            case BISHOP -> new BishopMovesCalculator();
+            case QUEEN -> new QueenMovesCalculator();
+            case KNIGHT -> new KnightMovesCalculator();
+            case PAWN -> new PawnMovesCalculator();
         };
         return moves.calculateMoves(board, myPosition);
+    }
+
+    public static boolean validateMove(ChessPosition newPosition, ChessPiece newPiece, ChessPiece oldPiece) {
+        int row = newPosition.getRow();
+        int col = newPosition.getColumn();
+        return onBoard(row, col) && newPiece == null || newPiece.getTeamColor() != oldPiece.getTeamColor();
+    }
+
+    private static boolean onBoard(int row, int col) {
+        return row >= 1 && row <= 8 && col >= 1 && col <= 8;
     }
 }
