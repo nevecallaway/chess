@@ -15,16 +15,17 @@ public class KingMovesCalculator implements ChessMovesCalculator {
         for (int i = 0; i < 8; i++) {
             int newRow = row + rowMoves[i];
             int newCol = col + colMoves[i];
-            ChessPosition newPosition = new ChessPosition(row, col);
+
+            if (!ChessPiece.onBoard(newRow, newCol)) {
+                continue;
+            }
+
+            ChessPosition newPosition = new ChessPosition(newRow, newCol);
             ChessPiece newPiece = board.getPiece(newPosition);
             if (ChessPiece.validateMove(newPosition, newPiece, board.getPiece(position))) {
                 validMoves.add(new ChessMove(position, newPosition, null));
             }
         }
         return validMoves;
-    }
-
-    private boolean onBoard(int row, int col) {
-        return row >= 1 && row <= 8 && col >= 1 && col <= 8;
     }
 }
