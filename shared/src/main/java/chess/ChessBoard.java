@@ -41,6 +41,15 @@ public class ChessBoard {
         return board[row][col];
     }
 
+    //Helper function for ChessGame
+    public void copyBoard(ChessBoard other) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                this.board[i][j] = other.board[i][j];
+            }
+        }
+    }
+
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
