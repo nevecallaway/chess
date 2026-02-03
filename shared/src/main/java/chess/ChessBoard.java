@@ -41,13 +41,29 @@ public class ChessBoard {
         return board[row][col];
     }
 
-    //Helper function for ChessGame
+    //Helper functions for ChessGame
     public void copyBoard(ChessBoard other) {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 this.board[i][j] = other.board[i][j];
             }
         }
+    }
+
+    public void movePiece(ChessMove move) {
+        ChessPosition start = move.getStartPosition();
+        ChessPosition end = move.getEndPosition();
+
+        int startRow = start.getRow() - 1;
+        int startCol = start.getColumn() - 1;
+        int endRow = end.getRow() - 1;
+        int endCol = end.getColumn() - 1;
+
+        ChessPiece movingPiece = board[startRow][startCol];
+
+        // Move the piece to the new position, clear start
+        board[endRow][endCol] = movingPiece;
+        board[startRow][startCol] = null;
     }
 
     /**
