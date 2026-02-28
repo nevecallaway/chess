@@ -1,0 +1,1 @@
+record AuthData(String authToken, String username) {}
