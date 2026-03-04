@@ -8,40 +8,48 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.UserService;
 import service.ClearService;
+import service.GameService;
 import service.request.RegisterRequest;
 import service.request.LoginRequest;
 import service.request.LogoutRequest;
+import service.request.CreateGameRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
+import service.result.CreateGameResult;
 import java.util.Map;
 
 public class Server {
     private final UserService userService;
     private final ClearService clearService;
+    private final GameService gameService;
     private final Javalin javalin;
 
     public Server() {
         DataAccess dataAccess = new MemoryDataAccess();
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
+        this.gameService = new GameService(dataAccess);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", this::clear)
                 .post("/user", this::register)
                 .post("/session", this::login)
                 .delete("/session", this::logout)
+                .post("/game", this::createGame)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
-    public Server(UserService userService, ClearService clearService) {
+    public Server(UserService userService, ClearService clearService, GameService gameService) {
         this.userService = userService;
         this.clearService = clearService;
+        this.gameService = gameService;
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", this::clear)
                 .post("/user", this::register)
                 .post("/session", this::login)
                 .delete("/session", this::logout)
+                .post("/game", this::createGame)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -92,6 +100,20 @@ public class Server {
         userService.logout(request);
         ctx.status(200);
         ctx.json(Map.of());
+    }
+
+    private void createGame(Context ctx) throws DataAccessException {
+        CreateGameRequest request = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
+
+        if (request.gameName() == null || request.gameName().isEmpty()) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        CreateGameResult result = gameService.createGame(request);
+        ctx.status(200);
+        ctx.json(result);
     }
 
     private void exceptionHandler(DataAccessException ex, Context ctx) {

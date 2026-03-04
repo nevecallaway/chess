@@ -2,6 +2,7 @@ package dataaccess;
 
 import model.UserData;
 import model.AuthData;
+import model.GameData;
 
 public interface DataAccess {
     void clear() throws DataAccessException;
@@ -13,4 +14,8 @@ public interface DataAccess {
     void createAuth(AuthData auth) throws DataAccessException;
 
     void deleteAuth(String authToken) throws DataAccessException;
+
+    int getNextGameId();
+
+    void createGame(GameData game) throws DataAccessException;
 }

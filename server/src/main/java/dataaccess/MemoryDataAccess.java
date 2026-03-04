@@ -2,17 +2,22 @@ package dataaccess;
 
 import model.UserData;
 import model.AuthData;
+import model.GameData;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MemoryDataAccess implements DataAccess {
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthData> authTokens = new HashMap<>();
+    private final Map<Integer, GameData> games = new HashMap<>();
+    private int gameIdCounter = 0;
 
     @Override
     public void clear() throws DataAccessException {
         users.clear();
         authTokens.clear();
+        games.clear();
+        gameIdCounter = 0;
     }
 
     @Override
@@ -43,5 +48,15 @@ public class MemoryDataAccess implements DataAccess {
             throw new DataAccessException("Auth token not found");
         }
         authTokens.remove(authToken);
+    }
+
+    @Override
+    public int getNextGameId() {
+        return ++gameIdCounter;
+    }
+
+    @Override
+    public void createGame(GameData game) throws DataAccessException {
+        games.put(game.gameID(), game);
     }
 }
