@@ -83,7 +83,11 @@ public class ChessBoard {
         }
 
         // Place other pieces
-        ChessPiece.PieceType[] rowOrder = {ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.KING, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK};
+        ChessPiece.PieceType[] rowOrder = {
+                ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.BISHOP,
+                ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.KING, ChessPiece.PieceType.BISHOP,
+                ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK
+        };
         for (int i = 0; i < 8; i++) {
             board[0][i] = new ChessPiece(ChessGame.TeamColor.WHITE, rowOrder[i]);
             board[7][i] = new ChessPiece(ChessGame.TeamColor.BLACK, rowOrder[i]);

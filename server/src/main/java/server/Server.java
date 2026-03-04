@@ -98,7 +98,9 @@ public class Server {
         if (ex.getMessage().contains("already exists")) {
             ctx.status(403);
             ctx.json(Map.of("message", "Error: already taken"));
-        } else if (ex.getMessage().contains("Invalid password") || ex.getMessage().contains("not found") || ex.getMessage().contains("Auth token not found")) {
+        } else if (ex.getMessage().contains("Invalid password")
+                || ex.getMessage().contains("not found")
+                || ex.getMessage().contains("Auth token not found")) {
             ctx.status(401);
             ctx.json(Map.of("message", "Error: unauthorized"));
         } else {
