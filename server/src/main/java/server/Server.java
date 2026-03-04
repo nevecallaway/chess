@@ -7,24 +7,41 @@ import dataaccess.MemoryDataAccess;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.UserService;
+import service.ClearService;
 import service.request.RegisterRequest;
 import service.result.RegisterResult;
 import java.util.Map;
 
 public class Server {
     private final UserService userService;
+    private final ClearService clearService;
     private final Javalin javalin;
 
     public Server() {
-        this(new UserService(new MemoryDataAccess()));
-    }
-
-    public Server(UserService userService) {
-        this.userService = userService;
+        DataAccess dataAccess = new MemoryDataAccess();
+        this.userService = new UserService(dataAccess);
+        this.clearService = new ClearService(dataAccess);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
+                .delete("/db", this::clear)
                 .post("/user", this::register)
                 .exception(DataAccessException.class, this::exceptionHandler);
+    }
+
+    public Server(UserService userService, ClearService clearService) {
+        this.userService = userService;
+        this.clearService = clearService;
+
+        javalin = Javalin.create(config -> config.staticFiles.add("web"))
+                .delete("/db", this::clear)
+                .post("/user", this::register)
+                .exception(DataAccessException.class, this::exceptionHandler);
+    }
+
+    private void clear(Context ctx) throws DataAccessException {
+        clearService.clear();
+        ctx.status(200);
+        ctx.json(Map.of());
     }
 
     private void register(Context ctx) throws DataAccessException {

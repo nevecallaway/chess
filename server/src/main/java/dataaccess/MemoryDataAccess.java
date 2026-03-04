@@ -10,6 +10,12 @@ public class MemoryDataAccess implements DataAccess {
     private final Map<String, AuthData> authTokens = new HashMap<>();
 
     @Override
+    public void clear() throws DataAccessException {
+        users.clear();
+        authTokens.clear();
+    }
+
+    @Override
     public void createUser(UserData user) throws DataAccessException {
         if (users.containsKey(user.username())) {
             throw new DataAccessException("User already exists");
