@@ -30,10 +30,10 @@ public class UserServiceTests {
         RegisterRequest request = new RegisterRequest("benito", "password64", "benito@example.com");
         RegisterResult result = userService.register(request);
 
-        assertNotNull(result, "Result shouldn't be null");
-        assertEquals("benito", result.username(), "Username should match");
-        assertNotNull(result.authToken(), "Auth token should be generated");
-        assertFalse(result.authToken().isEmpty(), "Auth token shouldn't be empty");
+        assertNotNull(result, "null");
+        assertEquals("benito", result.username());
+        assertNotNull(result.authToken());
+        assertFalse(result.authToken().isEmpty());
     }
 
     // Register negative
@@ -48,8 +48,7 @@ public class UserServiceTests {
             userService.register(request2);
         });
 
-        assertTrue(exception.getMessage().contains("already exists"), 
-                "Exception message should say user already exists");
+        assertTrue(exception.getMessage().contains("already exists"));
     }
 
     // Login positive test
@@ -62,10 +61,10 @@ public class UserServiceTests {
         LoginRequest loginRequest = new LoginRequest("benito", "password64");
         LoginResult result = userService.login(loginRequest);
 
-        assertNotNull(result, "Result shouldn't be null");
-        assertEquals("benito", result.username(), "Username should match");
-        assertNotNull(result.authToken(), "Auth token should be generated");
-        assertFalse(result.authToken().isEmpty(), "Auth token shouldn't be empty");
+        assertNotNull(result, "null");
+        assertEquals("benito", result.username());
+        assertNotNull(result.authToken());
+        assertFalse(result.authToken().isEmpty());
     }
 
     // Login negative test
@@ -80,8 +79,7 @@ public class UserServiceTests {
             userService.login(loginRequest);
         });
 
-        assertTrue(exception.getMessage().contains("Invalid password"), 
-                "Exception message should indicate invalid password");
+        assertTrue(exception.getMessage().contains("Invalid password"));
     }
 
     // Logout positive test
@@ -98,8 +96,7 @@ public class UserServiceTests {
             userService.logout(logoutRequest);
         });
 
-        assertTrue(exception.getMessage().contains("Auth token not found"), 
-                "Exception message should say auth token not found");
+        assertTrue(exception.getMessage().contains("Auth token not found"));
     }
 
     // Logout negative test
@@ -111,7 +108,6 @@ public class UserServiceTests {
             userService.logout(logoutRequest);
         });
 
-        assertTrue(exception.getMessage().contains("Auth token not found"), 
-                "Exception message should say auth token not found");
+        assertTrue(exception.getMessage().contains("Auth token not found"));
     }
 }
