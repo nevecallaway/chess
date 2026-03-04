@@ -4,8 +4,10 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import service.request.CreateGameRequest;
+import service.request.ListGamesRequest;
 import service.request.RegisterRequest;
 import service.result.CreateGameResult;
+import service.result.ListGamesResult;
 import service.result.RegisterResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,7 @@ public class GameServiceTests {
 
     @Test
     public void testCreateGamePositive() throws DataAccessException {
-        RegisterRequest registerRequest = new RegisterRequest("user1", "password", "user1@test.com");
+        RegisterRequest registerRequest = new RegisterRequest("benito", "password64", "benito@test.com");
         RegisterResult registerResult = userService.register(registerRequest);
 
         CreateGameRequest request = new CreateGameRequest("My Game", registerResult.authToken());
@@ -38,9 +40,34 @@ public class GameServiceTests {
 
     @Test
     public void testCreateGameInvalidToken() throws DataAccessException {
-        CreateGameRequest request = new CreateGameRequest("My Game", "invalidToken123");
+        CreateGameRequest request = new CreateGameRequest("My Game", "invalidToken64");
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             gameService.createGame(request);
+        });
+
+        assertTrue(exception.getMessage().contains("Auth token not found"));
+    }
+
+    @Test
+    public void testListGamesPositive() throws DataAccessException {
+        RegisterRequest registerRequest = new RegisterRequest("benito", "password64", "benito@test.com");
+        RegisterResult registerResult = userService.register(registerRequest);
+
+        CreateGameRequest createRequest = new CreateGameRequest("Game 1", registerResult.authToken());
+        gameService.createGame(createRequest);
+
+        ListGamesRequest listRequest = new ListGamesRequest(registerResult.authToken());
+        ListGamesResult result = gameService.listGames(listRequest);
+
+        assertNotNull(result, "null");
+        assertEquals(1, result.games().size());
+    }
+
+    @Test
+    public void testListGamesInvalidToken() throws DataAccessException {
+        ListGamesRequest request = new ListGamesRequest("invalidToken64");
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            gameService.listGames(request);
         });
 
         assertTrue(exception.getMessage().contains("Auth token not found"));
