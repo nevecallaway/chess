@@ -23,7 +23,7 @@ public class UserServiceTests {
         userService = new UserService(dataAccess);
     }
 
-    // Register positive test
+    // Register positive
 
     @Test
     public void testRegisterPositive() throws DataAccessException {
