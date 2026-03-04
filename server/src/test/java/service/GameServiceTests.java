@@ -85,7 +85,6 @@ public class GameServiceTests {
         JoinGameRequest joinRequest = new JoinGameRequest(registerResult.authToken(), "WHITE", createResult.gameID());
         gameService.joinGame(joinRequest);
 
-        // Should not throw
         assertTrue(true);
     }
 

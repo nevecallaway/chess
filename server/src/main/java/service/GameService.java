@@ -9,7 +9,10 @@ import service.request.ListGamesRequest;
 import service.request.JoinGameRequest;
 import service.result.CreateGameResult;
 import service.result.ListGamesResult;
+import service.result.GameInfo;
 import chess.ChessGame;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameService {
     private final DataAccess dataAccess;
@@ -34,7 +37,12 @@ public class GameService {
 
     public ListGamesResult listGames(ListGamesRequest request) throws DataAccessException {
         dataAccess.getAuth(request.authToken());
-        return new ListGamesResult(dataAccess.listGames());
+        List<GameData> gameDataList = dataAccess.listGames();
+        List<GameInfo> gameInfoList = new ArrayList<>();
+        for (GameData game : gameDataList) {
+            gameInfoList.add(new GameInfo(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName()));
+        }
+        return new ListGamesResult(gameInfoList);
     }
 
     public void joinGame(JoinGameRequest request) throws DataAccessException {

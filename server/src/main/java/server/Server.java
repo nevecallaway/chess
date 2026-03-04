@@ -171,7 +171,7 @@ public class Server {
     }
 
     private void exceptionHandler(DataAccessException ex, Context ctx) {
-        if (ex.getMessage().contains("already exists")) {
+        if (ex.getMessage().contains("already exists") || ex.getMessage().contains("player already taken")) {
             ctx.status(403);
             ctx.json(Map.of("message", "Error: already taken"));
         } else if (ex.getMessage().contains("Invalid password")
@@ -179,6 +179,11 @@ public class Server {
                 || ex.getMessage().contains("Auth token not found")) {
             ctx.status(401);
             ctx.json(Map.of("message", "Error: unauthorized"));
+        } else if (ex.getMessage().contains("Invalid player color")
+                || ex.getMessage().contains("Player color is required")
+                || ex.getMessage().contains("Game name can't be empty")) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
         } else {
             ctx.status(500);
             ctx.json(Map.of("message", "Error: " + ex.getMessage()));
