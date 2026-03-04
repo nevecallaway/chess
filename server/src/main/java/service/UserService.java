@@ -5,7 +5,9 @@ import dataaccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
 import service.request.RegisterRequest;
+import service.request.LoginRequest;
 import service.result.RegisterResult;
+import service.result.LoginResult;
 import java.util.UUID;
 
 public class UserService {
@@ -33,5 +35,19 @@ public class UserService {
         dataAccess.createAuth(auth);
 
         return new RegisterResult(request.username(), authToken);
+    }
+
+    public LoginResult login(LoginRequest request) throws DataAccessException {
+        UserData user = dataAccess.getUser(request.username());
+
+        if (!user.password().equals(request.password())) {
+            throw new DataAccessException("Invalid password");
+        }
+
+        String authToken = UUID.randomUUID().toString();
+        AuthData auth = new AuthData(authToken, request.username());
+        dataAccess.createAuth(auth);
+
+        return new LoginResult(request.username(), authToken);
     }
 }

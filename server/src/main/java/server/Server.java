@@ -9,7 +9,9 @@ import io.javalin.http.Context;
 import service.UserService;
 import service.ClearService;
 import service.request.RegisterRequest;
+import service.request.LoginRequest;
 import service.result.RegisterResult;
+import service.result.LoginResult;
 import java.util.Map;
 
 public class Server {
@@ -25,6 +27,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", this::clear)
                 .post("/user", this::register)
+                .post("/session", this::login)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -35,6 +38,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", this::clear)
                 .post("/user", this::register)
+                .post("/session", this::login)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -58,10 +62,27 @@ public class Server {
         ctx.json(result);
     }
 
+    private void login(Context ctx) throws DataAccessException {
+        LoginRequest request = new Gson().fromJson(ctx.body(), LoginRequest.class);
+
+        if (request.username() == null || request.password() == null) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        LoginResult result = userService.login(request);
+        ctx.status(200);
+        ctx.json(result);
+    }
+
     private void exceptionHandler(DataAccessException ex, Context ctx) {
         if (ex.getMessage().contains("already exists")) {
             ctx.status(403);
             ctx.json(Map.of("message", "Error: already taken"));
+        } else if (ex.getMessage().contains("Invalid password") || ex.getMessage().contains("not found")) {
+            ctx.status(401);
+            ctx.json(Map.of("message", "Error: unauthorized"));
         } else {
             ctx.status(500);
             ctx.json(Map.of("message", "Error: " + ex.getMessage()));
