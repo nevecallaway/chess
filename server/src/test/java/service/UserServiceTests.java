@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import service.request.RegisterRequest;
 import service.request.LoginRequest;
+import service.request.LogoutRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,5 +82,36 @@ public class UserServiceTests {
 
         assertTrue(exception.getMessage().contains("Invalid password"), 
                 "Exception message should indicate invalid password");
+    }
+
+    // Logout positive test
+
+    @Test
+    public void testLogoutPositive() throws DataAccessException {
+        RegisterRequest registerRequest = new RegisterRequest("benito", "password64", "benito@example.com");
+        RegisterResult registerResult = userService.register(registerRequest);
+
+        LogoutRequest logoutRequest = new LogoutRequest(registerResult.authToken());
+        userService.logout(logoutRequest);
+
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            userService.logout(logoutRequest);
+        });
+
+        assertTrue(exception.getMessage().contains("Auth token not found"), 
+                "Exception message should say auth token not found");
+    }
+
+    // Logout negative test
+
+    @Test
+    public void testLogoutInvalidToken() throws DataAccessException {
+        LogoutRequest logoutRequest = new LogoutRequest("invalidToken64");
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            userService.logout(logoutRequest);
+        });
+
+        assertTrue(exception.getMessage().contains("Auth token not found"), 
+                "Exception message should say auth token not found");
     }
 }
