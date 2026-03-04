@@ -14,6 +14,7 @@ import service.request.LoginRequest;
 import service.request.LogoutRequest;
 import service.request.CreateGameRequest;
 import service.request.ListGamesRequest;
+import service.request.JoinGameRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
 import service.result.CreateGameResult;
@@ -39,6 +40,7 @@ public class Server {
                 .delete("/session", this::logout)
                 .post("/game", this::createGame)
                 .get("/game", this::listGames)
+                .put("/game", this::joinGame)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -54,6 +56,7 @@ public class Server {
                 .delete("/session", this::logout)
                 .post("/game", this::createGame)
                 .get("/game", this::listGames)
+                .put("/game", this::joinGame)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -141,6 +144,30 @@ public class Server {
         ListGamesResult result = gameService.listGames(request);
         ctx.status(200);
         ctx.json(result);
+    }
+
+    private void joinGame(Context ctx) throws DataAccessException {
+        String authToken = ctx.header("authorization");
+
+        if (authToken == null || authToken.isEmpty()) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        JoinGameRequest bodyRequest = new Gson().fromJson(ctx.body(), JoinGameRequest.class);
+
+        if (bodyRequest.playerColor() == null || bodyRequest.playerColor().isEmpty()
+                || bodyRequest.gameID() == 0) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        JoinGameRequest request = new JoinGameRequest(authToken, bodyRequest.playerColor(), bodyRequest.gameID());
+        gameService.joinGame(request);
+        ctx.status(200);
+        ctx.json(Map.of());
     }
 
     private void exceptionHandler(DataAccessException ex, Context ctx) {
