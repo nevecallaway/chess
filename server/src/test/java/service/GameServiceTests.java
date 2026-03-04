@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import service.request.CreateGameRequest;
 import service.request.ListGamesRequest;
+import service.request.JoinGameRequest;
 import service.request.RegisterRequest;
 import service.result.CreateGameResult;
 import service.result.ListGamesResult;
@@ -68,6 +69,31 @@ public class GameServiceTests {
         ListGamesRequest request = new ListGamesRequest("invalidToken64");
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             gameService.listGames(request);
+        });
+
+        assertTrue(exception.getMessage().contains("Auth token not found"));
+    }
+
+    @Test
+    public void testJoinGamePositive() throws DataAccessException {
+        RegisterRequest registerRequest = new RegisterRequest("benito", "password64", "benito@test.com");
+        RegisterResult registerResult = userService.register(registerRequest);
+
+        CreateGameRequest createRequest = new CreateGameRequest("My Game", registerResult.authToken());
+        CreateGameResult createResult = gameService.createGame(createRequest);
+
+        JoinGameRequest joinRequest = new JoinGameRequest(registerResult.authToken(), "WHITE", createResult.gameID());
+        gameService.joinGame(joinRequest);
+
+        // Should not throw
+        assertTrue(true);
+    }
+
+    @Test
+    public void testJoinGameInvalidToken() throws DataAccessException {
+        JoinGameRequest request = new JoinGameRequest("invalidToken64", "WHITE", 1);
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            gameService.joinGame(request);
         });
 
         assertTrue(exception.getMessage().contains("Auth token not found"));
