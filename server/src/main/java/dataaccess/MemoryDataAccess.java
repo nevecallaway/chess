@@ -3,7 +3,10 @@ package dataaccess;
 import model.UserData;
 import model.AuthData;
 import model.GameData;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MemoryDataAccess implements DataAccess {
@@ -67,5 +70,10 @@ public class MemoryDataAccess implements DataAccess {
     @Override
     public void createGame(GameData game) throws DataAccessException {
         games.put(game.gameID(), game);
+    }
+
+    @Override
+    public List<GameData> listGames() throws DataAccessException {
+        return new ArrayList<>(games.values());
     }
 }

@@ -4,7 +4,9 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.GameData;
 import service.request.CreateGameRequest;
+import service.request.ListGamesRequest;
 import service.result.CreateGameResult;
+import service.result.ListGamesResult;
 import chess.ChessGame;
 
 public class GameService {
@@ -26,5 +28,10 @@ public class GameService {
         dataAccess.createGame(game);
 
         return new CreateGameResult(gameID);
+    }
+
+    public ListGamesResult listGames(ListGamesRequest request) throws DataAccessException {
+        dataAccess.getAuth(request.authToken());
+        return new ListGamesResult(dataAccess.listGames());
     }
 }

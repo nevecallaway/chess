@@ -13,9 +13,11 @@ import service.request.RegisterRequest;
 import service.request.LoginRequest;
 import service.request.LogoutRequest;
 import service.request.CreateGameRequest;
+import service.request.ListGamesRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
 import service.result.CreateGameResult;
+import service.result.ListGamesResult;
 import java.util.Map;
 
 public class Server {
@@ -36,6 +38,7 @@ public class Server {
                 .post("/session", this::login)
                 .delete("/session", this::logout)
                 .post("/game", this::createGame)
+                .get("/game", this::listGames)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -50,6 +53,7 @@ public class Server {
                 .post("/session", this::login)
                 .delete("/session", this::logout)
                 .post("/game", this::createGame)
+                .get("/game", this::listGames)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -120,6 +124,21 @@ public class Server {
 
         CreateGameRequest request = new CreateGameRequest(bodyRequest.gameName(), authToken);
         CreateGameResult result = gameService.createGame(request);
+        ctx.status(200);
+        ctx.json(result);
+    }
+
+    private void listGames(Context ctx) throws DataAccessException {
+        String authToken = ctx.header("authorization");
+
+        if (authToken == null || authToken.isEmpty()) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        ListGamesRequest request = new ListGamesRequest(authToken);
+        ListGamesResult result = gameService.listGames(request);
         ctx.status(200);
         ctx.json(result);
     }
