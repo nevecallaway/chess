@@ -1,4 +1,4 @@
 package service.result;
 
-public class RegisterResult {
+public record RegisterResult(String username, String authToken) {
 }
