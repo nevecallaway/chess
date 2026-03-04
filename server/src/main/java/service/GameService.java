@@ -15,6 +15,8 @@ public class GameService {
     }
 
     public CreateGameResult createGame(CreateGameRequest request) throws DataAccessException {
+        dataAccess.getAuth(request.authToken());
+
         if (request.gameName() == null || request.gameName().isEmpty()) {
             throw new DataAccessException("Game name can't be empty");
         }

@@ -103,14 +103,22 @@ public class Server {
     }
 
     private void createGame(Context ctx) throws DataAccessException {
-        CreateGameRequest request = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
+        String authToken = ctx.header("authorization");
+        CreateGameRequest bodyRequest = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
 
-        if (request.gameName() == null || request.gameName().isEmpty()) {
+        if (authToken == null || authToken.isEmpty()) {
             ctx.status(400);
             ctx.json(Map.of("message", "Error: bad request"));
             return;
         }
 
+        if (bodyRequest.gameName() == null || bodyRequest.gameName().isEmpty()) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        CreateGameRequest request = new CreateGameRequest(bodyRequest.gameName(), authToken);
         CreateGameResult result = gameService.createGame(request);
         ctx.status(200);
         ctx.json(result);

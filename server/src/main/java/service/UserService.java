@@ -53,6 +53,7 @@ public class UserService {
     }
 
     public void logout(LogoutRequest request) throws DataAccessException {
+        dataAccess.getAuth(request.authToken());
         dataAccess.deleteAuth(request.authToken());
     }
 }

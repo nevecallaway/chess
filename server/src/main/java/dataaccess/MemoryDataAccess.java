@@ -51,6 +51,15 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        AuthData auth = authTokens.get(authToken);
+        if (auth == null) {
+            throw new DataAccessException("Auth token not found");
+        }
+        return auth;
+    }
+
+    @Override
     public int getNextGameId() {
         return ++gameIdCounter;
     }
