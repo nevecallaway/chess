@@ -26,6 +26,7 @@ public class Server {
     private final ClearService clearService;
     private final GameService gameService;
     private final Javalin javalin;
+    private final Gson gson = new Gson();
 
     public Server() {
         DataAccess dataAccess = new MemoryDataAccess();
@@ -63,35 +64,40 @@ public class Server {
     private void clear(Context ctx) throws DataAccessException {
         clearService.clear();
         ctx.status(200);
-        ctx.json(Map.of());
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(Map.of()));
     }
 
     private void register(Context ctx) throws DataAccessException {
-        RegisterRequest request = new Gson().fromJson(ctx.body(), RegisterRequest.class);
+        RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
 
         if (request.username() == null || request.password() == null || request.email() == null) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         RegisterResult result = userService.register(request);
         ctx.status(200);
-        ctx.json(result);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(result));
     }
 
     private void login(Context ctx) throws DataAccessException {
-        LoginRequest request = new Gson().fromJson(ctx.body(), LoginRequest.class);
+        LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
 
         if (request.username() == null || request.password() == null) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         LoginResult result = userService.login(request);
         ctx.status(200);
-        ctx.json(result);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(result));
     }
 
     private void logout(Context ctx) throws DataAccessException {
@@ -99,36 +105,41 @@ public class Server {
 
         if (authToken == null || authToken.isEmpty()) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         LogoutRequest request = new LogoutRequest(authToken);
         userService.logout(request);
         ctx.status(200);
-        ctx.json(Map.of());
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(Map.of()));
     }
 
     private void createGame(Context ctx) throws DataAccessException {
         String authToken = ctx.header("authorization");
-        CreateGameRequest bodyRequest = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
+        CreateGameRequest bodyRequest = gson.fromJson(ctx.body(), CreateGameRequest.class);
 
         if (authToken == null || authToken.isEmpty()) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         if (bodyRequest.gameName() == null || bodyRequest.gameName().isEmpty()) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         CreateGameRequest request = new CreateGameRequest(bodyRequest.gameName(), authToken);
         CreateGameResult result = gameService.createGame(request);
         ctx.status(200);
-        ctx.json(result);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(result));
     }
 
     private void listGames(Context ctx) throws DataAccessException {
@@ -136,14 +147,16 @@ public class Server {
 
         if (authToken == null || authToken.isEmpty()) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         ListGamesRequest request = new ListGamesRequest(authToken);
         ListGamesResult result = gameService.listGames(request);
         ctx.status(200);
-        ctx.json(result);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(result));
     }
 
     private void joinGame(Context ctx) throws DataAccessException {
@@ -151,42 +164,49 @@ public class Server {
 
         if (authToken == null || authToken.isEmpty()) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
-        JoinGameRequest bodyRequest = new Gson().fromJson(ctx.body(), JoinGameRequest.class);
+        JoinGameRequest bodyRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
 
         if (bodyRequest.playerColor() == null || bodyRequest.playerColor().isEmpty()
                 || bodyRequest.gameID() == 0) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
             return;
         }
 
         JoinGameRequest request = new JoinGameRequest(authToken, bodyRequest.playerColor(), bodyRequest.gameID());
         gameService.joinGame(request);
         ctx.status(200);
-        ctx.json(Map.of());
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(Map.of()));
     }
 
     private void exceptionHandler(DataAccessException ex, Context ctx) {
         if (ex.getMessage().contains("already exists") || ex.getMessage().contains("player already taken")) {
             ctx.status(403);
-            ctx.json(Map.of("message", "Error: already taken"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: already taken")));
         } else if (ex.getMessage().contains("Invalid password")
                 || ex.getMessage().contains("not found")
                 || ex.getMessage().contains("Auth token not found")) {
             ctx.status(401);
-            ctx.json(Map.of("message", "Error: unauthorized"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: unauthorized")));
         } else if (ex.getMessage().contains("Invalid player color")
                 || ex.getMessage().contains("Player color is required")
                 || ex.getMessage().contains("Game name can't be empty")) {
             ctx.status(400);
-            ctx.json(Map.of("message", "Error: bad request"));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
         } else {
             ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + ex.getMessage()));
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: " + ex.getMessage())));
         }
     }
 
