@@ -21,7 +21,7 @@ public class ClearServiceTests {
         userService = new UserService(dataAccess);
     }
 
-    // Positive clear test
+    // Pos clear test
     @Test
     public void testClearPositive() throws DataAccessException {
         RegisterRequest request = new RegisterRequest("benito", "password64", "benito@example.com");
