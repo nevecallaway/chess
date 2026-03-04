@@ -6,6 +6,7 @@ import model.UserData;
 import model.AuthData;
 import service.request.RegisterRequest;
 import service.request.LoginRequest;
+import service.request.LogoutRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
 import java.util.UUID;
@@ -49,5 +50,9 @@ public class UserService {
         dataAccess.createAuth(auth);
 
         return new LoginResult(request.username(), authToken);
+    }
+
+    public void logout(LogoutRequest request) throws DataAccessException {
+        dataAccess.deleteAuth(request.authToken());
     }
 }

@@ -10,6 +10,7 @@ import service.UserService;
 import service.ClearService;
 import service.request.RegisterRequest;
 import service.request.LoginRequest;
+import service.request.LogoutRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class Server {
                 .delete("/db", this::clear)
                 .post("/user", this::register)
                 .post("/session", this::login)
+                .delete("/session", this::logout)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -39,6 +41,7 @@ public class Server {
                 .delete("/db", this::clear)
                 .post("/user", this::register)
                 .post("/session", this::login)
+                .delete("/session", this::logout)
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
@@ -76,11 +79,26 @@ public class Server {
         ctx.json(result);
     }
 
+    private void logout(Context ctx) throws DataAccessException {
+        String authToken = ctx.header("authorization");
+
+        if (authToken == null || authToken.isEmpty()) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+            return;
+        }
+
+        LogoutRequest request = new LogoutRequest(authToken);
+        userService.logout(request);
+        ctx.status(200);
+        ctx.json(Map.of());
+    }
+
     private void exceptionHandler(DataAccessException ex, Context ctx) {
         if (ex.getMessage().contains("already exists")) {
             ctx.status(403);
             ctx.json(Map.of("message", "Error: already taken"));
-        } else if (ex.getMessage().contains("Invalid password") || ex.getMessage().contains("not found")) {
+        } else if (ex.getMessage().contains("Invalid password") || ex.getMessage().contains("not found") || ex.getMessage().contains("Auth token not found")) {
             ctx.status(401);
             ctx.json(Map.of("message", "Error: unauthorized"));
         } else {
