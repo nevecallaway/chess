@@ -185,13 +185,14 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void createGame(GameData game) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
+            String gameJson = serializeGame(game.game());
             var sql = "INSERT INTO games (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)";
             try (var stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, game.gameID());
                 stmt.setString(2, game.whiteUsername());
                 stmt.setString(3, game.blackUsername());
                 stmt.setString(4, game.gameName());
-                stmt.setString(5, gson.toJson(game.game()));
+                stmt.setString(5, gameJson);
                 stmt.executeUpdate();
             }
         } catch (SQLException ex) {
@@ -210,7 +211,7 @@ public class MySQLDataAccess implements DataAccess {
             try (var stmt = conn.prepareStatement(sql)) {
                 try (var rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        ChessGame chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                        ChessGame chessGame = deserializeGame(rs.getString("game"));
                         games.add(new GameData(
                                 rs.getInt("gameID"),
                                 rs.getString("whiteUsername"),
@@ -235,7 +236,7 @@ public class MySQLDataAccess implements DataAccess {
                 stmt.setInt(1, gameID);
                 try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        ChessGame chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                        ChessGame chessGame = deserializeGame(rs.getString("game"));
                         return new GameData(
                                 rs.getInt("gameID"),
                                 rs.getString("whiteUsername"),
@@ -255,12 +256,13 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void updateGame(GameData game) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
+            String gameJson = serializeGame(game.game());
             var sql = "UPDATE games SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ? WHERE gameID = ?";
             try (var stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, game.whiteUsername());
                 stmt.setString(2, game.blackUsername());
                 stmt.setString(3, game.gameName());
-                stmt.setString(4, gson.toJson(game.game()));
+                stmt.setString(4, gameJson);
                 stmt.setInt(5, game.gameID());
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected == 0) {
@@ -270,5 +272,13 @@ public class MySQLDataAccess implements DataAccess {
         } catch (SQLException ex) {
             throw new DataAccessException("Failed to update game", ex);
         }
+    }
+
+    private String serializeGame(ChessGame game) {
+        return gson.toJson(game);
+    }
+
+    private ChessGame deserializeGame(String gameJson) {
+        return gson.fromJson(gameJson, ChessGame.class);
     }
 }

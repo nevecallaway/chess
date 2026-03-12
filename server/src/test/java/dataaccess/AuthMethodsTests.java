@@ -1,6 +1,7 @@
 package dataaccess;
 
 import model.AuthData;
+import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +21,8 @@ public class AuthMethodsTests {
             dataAccess = new MemoryDataAccess();
         }
         dataAccess.clear();
+        UserData user = new UserData("benito", "password", "benito@example.com");
+        dataAccess.createUser(user);
     }
 
     @Test

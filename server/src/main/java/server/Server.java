@@ -36,7 +36,8 @@ public class Server {
             DatabaseManager.createDatabase();
             dataAccess = new MySQLDataAccess();
         } catch (DataAccessException ex) {
-            System.err.println("Warning: Could not initialize MySQL database, using in-memory storage: " + ex.getMessage());
+            System.err.println("Warning: Could not initialize MySQL database, using in-memory storage");
+            ex.printStackTrace();
             dataAccess = new MemoryDataAccess();
         }
         this.userService = new UserService(dataAccess);

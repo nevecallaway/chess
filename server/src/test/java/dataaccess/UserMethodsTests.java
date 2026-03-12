@@ -3,6 +3,7 @@ package dataaccess;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +39,7 @@ public class UserMethodsTests {
         UserData retrieved = dataAccess.getUser("benito");
 
         assertEquals("benito", retrieved.username());
-        assertEquals("badbunny", retrieved.password());
+        assertTrue(BCrypt.checkpw("badbunny", retrieved.password()));
         assertEquals("benito@example.com", retrieved.email());
     }
 
