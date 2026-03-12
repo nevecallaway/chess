@@ -3,7 +3,9 @@ package server;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
 import dataaccess.MemoryDataAccess;
+import dataaccess.MySQLDataAccess;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.UserService;
@@ -29,7 +31,14 @@ public class Server {
     private final Gson gson = new Gson();
 
     public Server() {
-        DataAccess dataAccess = new MemoryDataAccess();
+        DataAccess dataAccess;
+        try {
+            DatabaseManager.createDatabase();
+            dataAccess = new MySQLDataAccess();
+        } catch (DataAccessException ex) {
+            System.err.println("Warning: Could not initialize MySQL database, using in-memory storage: " + ex.getMessage());
+            dataAccess = new MemoryDataAccess();
+        }
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);

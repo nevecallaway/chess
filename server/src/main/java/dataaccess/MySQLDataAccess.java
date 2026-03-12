@@ -9,23 +9,43 @@ import java.util.List;
 public class MySQLDataAccess implements DataAccess {
 
     public MySQLDataAccess() throws DataAccessException {
-        initializeTables();
+        configureTables();
     }
 
-    private void initializeTables() throws DataAccessException {
+    private void configureTables() throws DataAccessException {
+        String[] createStatements = {
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                username VARCHAR(255) NOT NULL PRIMARY KEY,
+                password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL
+            )""",
+            """
+            CREATE TABLE IF NOT EXISTS authTokens (
+                authToken VARCHAR(255) NOT NULL PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            )""",
+            """
+            CREATE TABLE IF NOT EXISTS games (
+                gameID INT NOT NULL PRIMARY KEY,
+                whiteUsername VARCHAR(255),
+                blackUsername VARCHAR(255),
+                gameName VARCHAR(255) NOT NULL,
+                game LONGTEXT NOT NULL,
+                FOREIGN KEY (whiteUsername) REFERENCES users(username) ON DELETE SET NULL,
+                FOREIGN KEY (blackUsername) REFERENCES users(username) ON DELETE SET NULL
+            )"""
+        };
+
         try (var conn = DatabaseManager.getConnection()) {
-            // Create users table
-            var createUsersTable = """
-                    CREATE TABLE IF NOT EXISTS users (
-                        username VARCHAR(255) NOT NULL PRIMARY KEY,
-                        password VARCHAR(255) NOT NULL,
-                        email VARCHAR(255) NOT NULL
-                    )""";
-            try (var stmt = conn.prepareStatement(createUsersTable)) {
-                stmt.executeUpdate();
+            for (String statement : createStatements) {
+                try (var stmt = conn.prepareStatement(statement)) {
+                    stmt.executeUpdate();
+                }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Failed to initialize users table", ex);
+            throw new DataAccessException("Failed to configure database tables", ex);
         }
     }
 
