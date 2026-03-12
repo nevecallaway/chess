@@ -3,6 +3,7 @@ package dataaccess;
 import model.UserData;
 import model.AuthData;
 import model.GameData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +29,10 @@ public class MemoryDataAccess implements DataAccess {
         if (users.containsKey(user.username())) {
             throw new DataAccessException("User already exists");
         }
-        users.put(user.username(), user);
+        // Hash the password before storing
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        UserData hashedUser = new UserData(user.username(), hashedPassword, user.email());
+        users.put(user.username(), hashedUser);
     }
 
     @Override
