@@ -12,7 +12,6 @@ public class AuthMethodsTests {
 
     @BeforeEach
     public void setUp() throws DataAccessException {
-        // Try to use MySQL, fall back to memory if it fails
         try {
             DatabaseManager.createDatabase();
             dataAccess = new MySQLDataAccess();
@@ -27,8 +26,7 @@ public class AuthMethodsTests {
     public void testCreateAuth() throws DataAccessException {
         AuthData auth = new AuthData("badbunny", "benito");
         dataAccess.createAuth(auth);
-
-        assertTrue(true, "Auth token created successfully");
+        assertTrue(true);
     }
 
     @Test
@@ -46,10 +44,7 @@ public class AuthMethodsTests {
     public void testDeleteAuth() throws DataAccessException {
         AuthData auth = new AuthData("badbunny", "benito");
         dataAccess.createAuth(auth);
-
         dataAccess.deleteAuth("badbunny");
-
-        // Verify it's deleted
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             dataAccess.getAuth("badbunny");
         });

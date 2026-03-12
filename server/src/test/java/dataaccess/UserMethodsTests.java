@@ -12,7 +12,6 @@ public class UserMethodsTests {
 
     @BeforeEach
     public void setUp() throws DataAccessException {
-        // Try to use MySQL, fall back to memory if it fails
         try {
             DatabaseManager.createDatabase();
             dataAccess = new MySQLDataAccess();
@@ -25,16 +24,14 @@ public class UserMethodsTests {
     }
 
     @Test
-    public void testCreateUser() throws DataAccessException {
+    public void testCreate() throws DataAccessException {
         UserData user = new UserData("benito", "badbunny", "benito@example.com");
         dataAccess.createUser(user);
-
-        // If here without an exception, then test passed
-        assertTrue(true, "User created successfully");
+        assertTrue(true);
     }
 
     @Test
-    public void testGetUser() throws DataAccessException {
+    public void testGet() throws DataAccessException {
         UserData user = new UserData("benito", "badbunny", "benito@example.com");
         dataAccess.createUser(user);
 
@@ -46,11 +43,9 @@ public class UserMethodsTests {
     }
 
     @Test
-    public void testCreateDuplicateUserFails() throws DataAccessException {
+    public void testDuplicateFails() throws DataAccessException {
         UserData user = new UserData("benito", "badbunny", "benito@example.com");
         dataAccess.createUser(user);
-
-        // Try to create duplicate
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             dataAccess.createUser(user);
         });
@@ -58,7 +53,7 @@ public class UserMethodsTests {
     }
 
     @Test
-    public void testGetNonexistentUserFails() throws DataAccessException {
+    public void testNotFoundFails() throws DataAccessException {
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             dataAccess.getUser("nonexistent");
         });
