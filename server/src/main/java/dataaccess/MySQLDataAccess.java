@@ -18,12 +18,6 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     private void configureTables() throws DataAccessException {
-        String[] dropStatements = {
-            "DROP TABLE IF EXISTS authTokens",
-            "DROP TABLE IF EXISTS games",
-            "DROP TABLE IF EXISTS users"
-        };
-        
         String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -50,11 +44,6 @@ public class MySQLDataAccess implements DataAccess {
         };
 
         try (var conn = DatabaseManager.getConnection()) {
-            for (String statement : dropStatements) {
-                try (var stmt = conn.prepareStatement(statement)) {
-                    stmt.executeUpdate();
-                }
-            }
             for (String statement : createStatements) {
                 try (var stmt = conn.prepareStatement(statement)) {
                     stmt.executeUpdate();
