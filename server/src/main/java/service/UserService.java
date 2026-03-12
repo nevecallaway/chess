@@ -9,6 +9,7 @@ import service.request.LoginRequest;
 import service.request.LogoutRequest;
 import service.result.RegisterResult;
 import service.result.LoginResult;
+import org.mindrot.jbcrypt.BCrypt;
 import java.util.UUID;
 
 public class UserService {
@@ -41,7 +42,7 @@ public class UserService {
     public LoginResult login(LoginRequest request) throws DataAccessException {
         UserData user = dataAccess.getUser(request.username());
 
-        if (!user.password().equals(request.password())) {
+        if (!BCrypt.checkpw(request.password(), user.password())) {
             throw new DataAccessException("Invalid password");
         }
 

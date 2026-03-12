@@ -182,7 +182,7 @@ public class Server {
         JoinGameRequest bodyRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
 
         if (bodyRequest.playerColor() == null || bodyRequest.playerColor().isEmpty()
-                || bodyRequest.gameID() == 0) {
+                || bodyRequest.gameID() <= 0) {
             ctx.status(400);
             ctx.contentType("application/json");
             ctx.result(gson.toJson(Map.of("message", "Error: bad request")));
@@ -197,6 +197,13 @@ public class Server {
     }
 
     private void exceptionHandler(DataAccessException ex, Context ctx) {
+        String errorMessage = ex.getMessage();
+        // Print cause if available for debugging
+        if (ex.getCause() != null) {
+            errorMessage = ex.getCause().getMessage();
+            ex.printStackTrace(); // Print full stack trace for debugging
+        }
+        
         if (ex.getMessage().contains("already exists") || ex.getMessage().contains("player already taken")) {
             ctx.status(403);
             ctx.contentType("application/json");
