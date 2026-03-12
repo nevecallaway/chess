@@ -69,4 +69,16 @@ public class AuthMethodsTests {
         });
         assertTrue(exception.getMessage().contains("not found"));
     }
+
+    @Test
+    public void testCreateDuplicateAuthTokenFails() throws DataAccessException {
+        AuthData auth1 = new AuthData("sametoken", "benito");
+        AuthData auth2 = new AuthData("sametoken", "benito");
+        dataAccess.createAuth(auth1);
+        // Creating same auth token again should fail
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            dataAccess.createAuth(auth2);
+        });
+        assertTrue(exception.getMessage().contains("Failed") || exception.getMessage().contains("already"));
+    }
 }

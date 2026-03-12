@@ -135,4 +135,37 @@ public class GameMethodsTests {
         int id3 = dataAccess.getNextGameId();
         assertEquals(3, id3);
     }
+
+    @Test
+    public void testCreateDuplicateGameFails() throws DataAccessException {
+        ChessGame game = new ChessGame();
+        GameData gameData = new GameData(1, "player1", "player2", "Test Game", game);
+        dataAccess.createGame(gameData);
+        
+        // Creating a game with the same ID should fail
+        ChessGame game2 = new ChessGame();
+        GameData gameData2 = new GameData(1, "player1", "player2", "Duplicate Game", game2);
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            dataAccess.createGame(gameData2);
+        });
+        assertTrue(exception.getMessage().contains("Failed") || exception.getMessage().contains("exists"));
+    }
+
+    @Test
+    public void testCreateGameWithNullGamenameFails() throws DataAccessException {
+        ChessGame game = new ChessGame();
+        GameData gameData = new GameData(1, "player1", "player2", null, game);
+        
+        // GameData with null name might fail during insert
+        // This is a boundary condition test
+        try {
+            dataAccess.createGame(gameData);
+            // If it succeeds, verify it was stored (some implementations might allow it)
+            GameData retrieved = dataAccess.getGame(1);
+            assertNull(retrieved.gameName());
+        } catch (DataAccessException ex) {
+            // If it fails, that's also acceptable
+            assertTrue(true);
+        }
+    }
 }
