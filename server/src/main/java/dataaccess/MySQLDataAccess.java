@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MySQLDataAccess implements DataAccess {
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public MySQLDataAccess() throws DataAccessException {
         configureTables();
