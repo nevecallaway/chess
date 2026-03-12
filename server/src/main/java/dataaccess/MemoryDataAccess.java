@@ -63,7 +63,7 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
-    public int getNextGameId() {
+    public int getNextGameId() throws DataAccessException {
         return ++gameIdCounter;
     }
 

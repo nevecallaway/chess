@@ -103,26 +103,71 @@ public class MySQLDataAccess implements DataAccess {
 
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
-        // TODO: Implement
-        throw new DataAccessException("Not yet implemented");
+        try (var conn = DatabaseManager.getConnection()) {
+            var sql = "INSERT INTO authTokens (authToken, username) VALUES (?, ?)";
+            try (var stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, auth.authToken());
+                stmt.setString(2, auth.username());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to create auth token", ex);
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        // TODO: Implement
-        throw new DataAccessException("Not yet implemented");
+        try (var conn = DatabaseManager.getConnection()) {
+            var sql = "DELETE FROM authTokens WHERE authToken = ?";
+            try (var stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, authToken);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Auth token not found");
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to delete auth token", ex);
+        }
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        // TODO: Implement
-        throw new DataAccessException("Not yet implemented");
+        try (var conn = DatabaseManager.getConnection()) {
+            var sql = "SELECT authToken, username FROM authTokens WHERE authToken = ?";
+            try (var stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, authToken);
+                try (var rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return new AuthData(
+                                rs.getString("authToken"),
+                                rs.getString("username")
+                        );
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to get auth token", ex);
+        }
+        throw new DataAccessException("Auth token not found");
     }
 
     @Override
-    public int getNextGameId() {
-        // TODO: Implement
-        throw new RuntimeException("Not yet implemented");
+    public int getNextGameId() throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            var sql = "SELECT MAX(gameID) as maxId FROM games";
+            try (var stmt = conn.prepareStatement(sql)) {
+                try (var rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int maxId = rs.getInt("maxId");
+                        return maxId + 1;
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Failed to get next game ID", ex);
+        }
+        return 1;
     }
 
     @Override
