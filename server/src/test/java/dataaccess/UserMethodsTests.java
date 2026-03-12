@@ -18,6 +18,7 @@ public class UserMethodsTests {
             dataAccess = new MySQLDataAccess();
         } catch (DataAccessException ex) {
             System.err.println("MySQL not available, using MemoryDataAccess: " + ex.getMessage());
+            ex.printStackTrace();
             dataAccess = new MemoryDataAccess();
         }
         dataAccess.clear();
