@@ -1,16 +1,17 @@
 package client;
 
-import chess.*;
-import ui.ChessBoardUI;
-
 public class ClientMain {
     public static void main(String[] args) {
-        ChessGame game = new ChessGame();
-        
-        System.out.println("WHITE PERSPECTIVE");
-        ChessBoardUI.displayBoardWhitePerspective(game);
-        
-        System.out.println("BLACK PERSPECTIVE");
-        ChessBoardUI.displayBoardBlackPerspective(game);
+        String serverUrl = "http://localhost:8080";
+        if (args.length == 1) {
+            serverUrl = args[0];
+        }
+
+        try {
+            new client.ChessClient(serverUrl).run();
+        } catch (Throwable ex) {
+            System.out.printf("Unable to start client: %s%n", ex.getMessage());
+        }
     }
 }
+
