@@ -220,7 +220,9 @@ public class ChessClient {
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
-            if (e.getMessage().contains("Expected:") || e.getMessage().contains("Invalid") || e.getMessage().contains("Color") || e.getMessage().contains("already in this game")) {
+            String msg = e.getMessage();
+            if (msg.contains("Expected:") || msg.contains("Invalid") || msg.contains("Color") || 
+                msg.contains("already in this game")) {
                 throw e;
             }
             throw new Exception("Failed to join game: " + e.getMessage() + "\n");

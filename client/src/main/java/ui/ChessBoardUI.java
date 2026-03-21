@@ -33,36 +33,15 @@ public class ChessBoardUI {
     
     private static void displayWhiteBoard(ChessBoard board) {
         System.out.println();  // Blank line for spacing
-        
-        // Top row with column letters
         System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + "    a  b  c  d  e  f  g  h" + 
                          EscapeSequences.RESET_TEXT_COLOR);
         System.out.println();
         
         // Rows 8 down to 1
         for (int row = 8; row >= 1; row--) {
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + " " + EscapeSequences.RESET_TEXT_COLOR);
-            
-            // Columns 1 to 8
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(position);
-                
-                // Determine background color
-                String bgColor = ((row + col) % 2 == 0) ? 
-                    EscapeSequences.SET_BG_COLOR_WHITE : EscapeSequences.SET_BG_COLOR_DARK_GREY;
-                
-                // Get piece display
-                String pieceDisplay = getPieceDisplay(piece);
-                
-                System.out.print(bgColor + pieceDisplay + EscapeSequences.RESET_BG_COLOR);
-            }
-            
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + EscapeSequences.RESET_TEXT_COLOR);
-            System.out.println();
+            displayBoardRow(board, row, false);
         }
         
-        // Bottom row with column letters
         System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + "    a  b  c  d  e  f  g  h" + 
                          EscapeSequences.RESET_TEXT_COLOR);
         System.out.println();
@@ -71,40 +50,41 @@ public class ChessBoardUI {
     
     private static void displayBlackBoard(ChessBoard board) {
         System.out.println();  // Blank line for spacing
-        
-        // Top row with column letters (reversed)
         System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + "    h  g  f  e  d  c  b  a" + 
                          EscapeSequences.RESET_TEXT_COLOR);
         System.out.println();
         
         // Rows 1 to 8 (reversed from white perspective)
         for (int row = 1; row <= 8; row++) {
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + " " + EscapeSequences.RESET_TEXT_COLOR);
-            
-            // Columns 8 down to 1 (reversed)
-            for (int col = 8; col >= 1; col--) {
-                ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(position);
-                
-                // Determine background color
-                String bgColor = ((row + col) % 2 == 0) ? 
-                    EscapeSequences.SET_BG_COLOR_WHITE : EscapeSequences.SET_BG_COLOR_DARK_GREY;
-                
-                // Get piece display
-                String pieceDisplay = getPieceDisplay(piece);
-                
-                System.out.print(bgColor + pieceDisplay + EscapeSequences.RESET_BG_COLOR);
-            }
-            
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + EscapeSequences.RESET_TEXT_COLOR);
-            System.out.println();
+            displayBoardRow(board, row, true);
         }
         
-        // Bottom row with column letters (reversed)
         System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + "    h  g  f  e  d  c  b  a" + 
                          EscapeSequences.RESET_TEXT_COLOR);
         System.out.println();
         System.out.println();  // Blank line for spacing
+    }
+    
+    private static void displayBoardRow(ChessBoard board, int row, boolean reversed) {
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + " " + EscapeSequences.RESET_TEXT_COLOR);
+        
+        int startCol = reversed ? 8 : 1;
+        int endCol = reversed ? 0 : 9;
+        int increment = reversed ? -1 : 1;
+        
+        for (int col = startCol; col != endCol; col += increment) {
+            ChessPosition position = new ChessPosition(row, col);
+            ChessPiece piece = board.getPiece(position);
+            
+            String bgColor = ((row + col) % 2 == 0) ? 
+                EscapeSequences.SET_BG_COLOR_WHITE : EscapeSequences.SET_BG_COLOR_DARK_GREY;
+            String pieceDisplay = getPieceDisplay(piece);
+            
+            System.out.print(bgColor + pieceDisplay + EscapeSequences.RESET_BG_COLOR);
+        }
+        
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE + " " + row + EscapeSequences.RESET_TEXT_COLOR);
+        System.out.println();
     }
     
     private static String getPieceDisplay(ChessPiece piece) {
