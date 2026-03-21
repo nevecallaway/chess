@@ -45,8 +45,20 @@ public class ServerFacade {
     }
 
     public void joinGame(String authToken, String playerColor, int gameID) throws Exception {
-        JoinGameRequest request = new JoinGameRequest(authToken, playerColor, gameID);
+        // Create request body without authToken (authToken goes in Authorization header)
+        JoinGameBody request = new JoinGameBody(playerColor, gameID);
         makeRequest("PUT", "/game", request, Void.class, authToken);
+    }
+
+    // Inner class for join game request body (without authToken)
+    private static class JoinGameBody {
+        String playerColor;
+        int gameID;
+
+        JoinGameBody(String playerColor, int gameID) {
+            this.playerColor = playerColor;
+            this.gameID = gameID;
+        }
     }
 
     public void clear() throws Exception {

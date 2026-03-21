@@ -62,6 +62,7 @@ public class ChessClient {
                 case "list" -> listGames();
                 case "play" -> playGame(params);
                 case "observe" -> observeGame(params);
+                case "back" -> "Returning to main menu.\n" + help();
                 case "quit" -> "quit";
                 default -> help();
             };
@@ -89,7 +90,11 @@ public class ChessClient {
             state = State.POSTLOGIN;
             return String.format("Account created! Welcome, %s!\n\n", username) + help();
         } catch (Exception e) {
-            throw new Exception("Registration failed. Username may already exist.\n");
+            String errorMsg = e.getMessage().toLowerCase();
+            if (errorMsg.contains("already exists")) {
+                throw new Exception("Registration failed. Username or email already taken.\n");
+            }
+            throw new Exception("Registration failed.\n");
         }
     }
 
@@ -123,7 +128,7 @@ public class ChessClient {
             username = null;
             authToken = null;
             state = State.PRELOGIN;
-            return "You have been logged out.\n";
+            return "You have been logged out.\n\n" + help();
         } catch (Exception e) {
             throw new Exception("Logout failed.\n");
         }
@@ -163,6 +168,7 @@ public class ChessClient {
                 String black = (game.blackUsername() != null) ? game.blackUsername() : "[empty]";
                 sb.append(String.format("%d. %s - White: %s, Black: %s\n", i + 1, game.gameName(), white, black));
             }
+            sb.append("\nNow use 'play' or 'observe' with the game number.\n");
             return sb.toString();
         } catch (Exception e) {
             throw new Exception("Failed to list games.\n");
@@ -201,8 +207,7 @@ public class ChessClient {
                 ChessBoardUI.displayBoardBlackPerspective(chessGame);
             }
             System.out.println("(Gameplay coming in Phase 6)\n");
-            
-            return String.format("Joined game %d as %s.\n", game.gameID(), color);
+            return String.format("Joined game %d as %s.\n\nType 'back' to return to menu.\n", game.gameID(), color);
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
@@ -230,15 +235,13 @@ public class ChessClient {
             }
 
             GameInfo game = gamesList.get(gameNumber);
-            server.joinGame(authToken, "OBSERVER", game.gameID());
             
-            // Display the initial board from white's perspective (standard for observers)
+            // Display the board from white's perspective (observer view)
             ChessGame chessGame = new ChessGame();
             System.out.println("\nObserving: " + game.gameName());
             ChessBoardUI.displayBoardWhitePerspective(chessGame);
             System.out.println("(Gameplay coming in Phase 6)\n");
-            
-            return String.format("Observing game %d.\n", game.gameID());
+            return String.format("Observing game %d.\n\nType 'back' to return to menu.\n", game.gameID());
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
@@ -259,7 +262,7 @@ public class ChessClient {
         }
         return """
                 create <game_name>
-                list
+                list (do before play/observe to see game numbers)
                 play <game_number> <WHITE|BLACK>
                 observe <game_number>
                 logout
