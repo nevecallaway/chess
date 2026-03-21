@@ -196,6 +196,15 @@ public class ChessClient {
             }
 
             GameInfo game = gamesList.get(gameNumber);
+            
+            // Check if player is already in the game as the other color
+            if (color.equals("WHITE") && game.blackUsername() != null && game.blackUsername().equals(username)) {
+                throw new Exception("You are already in this game as BLACK.\n");
+            }
+            if (color.equals("BLACK") && game.whiteUsername() != null && game.whiteUsername().equals(username)) {
+                throw new Exception("You are already in this game as WHITE.\n");
+            }
+            
             server.joinGame(authToken, color, game.gameID());
             
             // Display the initial board
@@ -211,7 +220,7 @@ public class ChessClient {
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
-            if (e.getMessage().contains("Expected:") || e.getMessage().contains("Invalid") || e.getMessage().contains("Color")) {
+            if (e.getMessage().contains("Expected:") || e.getMessage().contains("Invalid") || e.getMessage().contains("Color") || e.getMessage().contains("already in this game")) {
                 throw e;
             }
             throw new Exception("Failed to join game: " + e.getMessage() + "\n");
