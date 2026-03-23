@@ -225,6 +225,9 @@ public class ChessClient {
                 msg.contains("already in this game")) {
                 throw e;
             }
+            if (msg.contains("already taken")) {
+                throw new Exception("Already taken, try again.\n");
+            }
             throw new Exception("Failed to join game: " + e.getMessage() + "\n");
         }
     }

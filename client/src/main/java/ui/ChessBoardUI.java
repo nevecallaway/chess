@@ -77,7 +77,7 @@ public class ChessBoardUI {
             ChessPiece piece = board.getPiece(position);
             
             String bgColor = ((row + col) % 2 == 0) ? 
-                EscapeSequences.SET_BG_COLOR_WHITE : EscapeSequences.SET_BG_COLOR_DARK_GREY;
+                EscapeSequences.SET_BG_COLOR_DARK_GREY : EscapeSequences.SET_BG_COLOR_WHITE;
             String pieceDisplay = getPieceDisplay(piece);
             
             System.out.print(bgColor + pieceDisplay + EscapeSequences.RESET_BG_COLOR);

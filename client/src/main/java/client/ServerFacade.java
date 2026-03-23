@@ -102,7 +102,8 @@ public class ServerFacade {
                 // Read error response
                 try (var es = http.getErrorStream()) {
                     String errorBody = new String(es.readAllBytes(), StandardCharsets.UTF_8);
-                    throw new Exception("HTTP " + responseCode + ": " + errorBody);
+                    String errorMessage = extractErrorMessage(errorBody);
+                    throw new Exception("HTTP " + responseCode + ": " + errorMessage);
                 }
             }
         } catch (URISyntaxException e) {
@@ -110,5 +111,17 @@ public class ServerFacade {
         } catch (IOException e) {
             throw new Exception("Network error: " + e.getMessage(), e);
         }
+    }
+
+    private String extractErrorMessage(String errorBody) {
+        try {
+            var errorMap = gson.fromJson(errorBody, java.util.Map.class);
+            if (errorMap != null && errorMap.containsKey("message")) {
+                return (String) errorMap.get("message");
+            }
+        } catch (Exception ignored) {
+            // If parsing fails, return the raw error body
+        }
+        return errorBody;
     }
 }
