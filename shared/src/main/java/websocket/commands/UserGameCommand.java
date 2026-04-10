@@ -1,6 +1,7 @@
 package websocket.commands;
 
 import java.util.Objects;
+import chess.ChessMove;
 
 /**
  * Represents a command a user can send the server over a websocket
@@ -16,10 +17,20 @@ public class UserGameCommand {
 
     private final Integer gameID;
 
+    private ChessMove move;
+
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
+        this.move = null;
+    }
+
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, ChessMove move) {
+        this.commandType = commandType;
+        this.authToken = authToken;
+        this.gameID = gameID;
+        this.move = move;
     }
 
     public enum CommandType {
@@ -41,6 +52,14 @@ public class UserGameCommand {
         return gameID;
     }
 
+    public ChessMove getMove() {
+        return move;
+    }
+
+    public void setMove(ChessMove move) {
+        this.move = move;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -51,11 +70,12 @@ public class UserGameCommand {
         }
         return getCommandType() == that.getCommandType() &&
                 Objects.equals(getAuthToken(), that.getAuthToken()) &&
-                Objects.equals(getGameID(), that.getGameID());
+                Objects.equals(getGameID(), that.getGameID()) &&
+                Objects.equals(getMove(), that.getMove());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getCommandType(), getAuthToken(), getGameID());
+        return Objects.hash(getCommandType(), getAuthToken(), getGameID(), getMove());
     }
 }
