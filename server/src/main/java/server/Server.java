@@ -31,12 +31,15 @@ import websocket.messages.ServerMessage;
 import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.LoadGameMessage;
+import model.AuthData;
+import model.GameData;
 import java.util.Map;
 
 public class Server {
     private final UserService userService;
     private final ClearService clearService;
     private final GameService gameService;
+    private final DataAccess dataAccess;
     private final GameSessionManager sessionManager;
     private final Javalin javalin;
     private final Gson gson = new Gson();
@@ -51,6 +54,7 @@ public class Server {
             ex.printStackTrace();
             dataAccess = new MemoryDataAccess();
         }
+        this.dataAccess = dataAccess;
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);
@@ -73,7 +77,8 @@ public class Server {
                 .exception(DataAccessException.class, this::exceptionHandler);
     }
 
-    public Server(UserService userService, ClearService clearService, GameService gameService) {
+    public Server(UserService userService, ClearService clearService, GameService gameService, DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
         this.userService = userService;
         this.clearService = clearService;
         this.gameService = gameService;
@@ -309,8 +314,37 @@ public class Server {
     }
 
     private void handleConnect(WsMessageContext ctx, UserGameCommand command) {
-        // TODO: Implement CONNECT handler
-        sessionManager.sendToUser(ctx, new ErrorMessage("Error: CONNECT not yet implemented"));
+        try {
+            // 1. Validate auth token and get username
+            dataAccess.getAuth(command.getAuthToken());
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            String username = auth.username();
+
+            // 2. Get the game data
+            GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
+
+            // 3. Register user in session
+            sessionManager.addUserToGame(command.getGameID(), ctx, username, command.getAuthToken());
+
+            // 4. Send LOAD_GAME message to this user
+            LoadGameMessage loadGameMessage = new LoadGameMessage(gameData.game());
+            sessionManager.sendToUser(ctx, loadGameMessage);
+
+            // 5. Broadcast notification to other users in game
+            String notification;
+            if (username.equals(gameData.whiteUsername())) {
+                notification = username + " connected as white";
+            } else if (username.equals(gameData.blackUsername())) {
+                notification = username + " connected as black";
+            } else {
+                notification = username + " joined as an observer";
+            }
+            NotificationMessage notificationMessage = new NotificationMessage(notification);
+            sessionManager.broadcastToGameExcept(command.getGameID(), notificationMessage, ctx);
+
+        } catch (DataAccessException e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
     }
 
     private void handleMakeMove(WsMessageContext ctx, UserGameCommand command) {
