@@ -34,7 +34,7 @@ import websocket.messages.LoadGameMessage;
 import model.AuthData;
 import model.GameData;
 import chess.InvalidMoveException;
-import chess.TeamColor;
+import chess.ChessGame.TeamColor;
 import java.util.Map;
 
 public class Server {
@@ -407,13 +407,61 @@ public class Server {
     }
 
     private void handleLeave(WsMessageContext ctx, UserGameCommand command) {
-        // Implement LEAVE handler
-        sessionManager.sendToUser(ctx, new ErrorMessage("Error: LEAVE not yet implemented"));
+        try {
+            // Get user and game info
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            String username = auth.username();
+            GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
+
+            // If player is leaving, clear slot
+            if (username.equals(gameData.whiteUsername())) {
+                gameData = new GameData(gameData.gameID(), null, gameData.blackUsername(), 
+                                       gameData.gameName(), gameData.game());
+            } else if (username.equals(gameData.blackUsername())) {
+                gameData = new GameData(gameData.gameID(), gameData.whiteUsername(), null, 
+                                       gameData.gameName(), gameData.game());
+            }
+            // If observer, no change to game data
+
+            // Remove from session
+            sessionManager.removeUserFromGame(ctx);
+
+            // Update game in database
+            dataAccess.updateGame(gameData);
+
+            // Broadcast notification
+            NotificationMessage leaveNotif = new NotificationMessage(username + " left the game");
+            sessionManager.broadcastToGame(command.getGameID(), leaveNotif);
+
+        } catch (DataAccessException e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        } catch (Exception e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
     }
 
     private void handleResign(WsMessageContext ctx, UserGameCommand command) {
-        // Implement RESIGN handler
-        sessionManager.sendToUser(ctx, new ErrorMessage("Error: RESIGN not yet implemented"));
+        try {
+            // Get user and game info
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            String username = auth.username();
+            GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
+
+            // Validate player is actually in the game (not an observer)
+            if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Only players can resign"));
+                return;
+            }
+
+            // Broadcast resignation notification
+            NotificationMessage resignNotif = new NotificationMessage(username + " resigned");
+            sessionManager.broadcastToGame(command.getGameID(), resignNotif);
+
+        } catch (DataAccessException e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        } catch (Exception e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
     }
 
     public int run(int port) {
