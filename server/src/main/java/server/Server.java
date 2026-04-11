@@ -49,7 +49,6 @@ public class Server {
     public Server() {
         // Default to MemoryDataAccess (like PetShop example)
         this.dataAccess = new MemoryDataAccess();
-        System.out.println("DEBUG: Using MemoryDataAccess");
         
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
@@ -362,8 +361,28 @@ public class Server {
                 return;
             }
 
-            // Validate it's this player's turn
+            // Check if game is already over (player resigned/left)
+            if (username.equals(gameData.whiteUsername()) && gameData.whiteUsername() == null) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                return;
+            }
+            if (username.equals(gameData.blackUsername()) && gameData.blackUsername() == null) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                return;
+            }
+            
+            // Check if opponent has resigned (opponent's slot is null)
             TeamColor playerTeam = username.equals(gameData.whiteUsername()) ? TeamColor.WHITE : TeamColor.BLACK;
+            if (playerTeam == TeamColor.WHITE && gameData.blackUsername() == null) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                return;
+            }
+            if (playerTeam == TeamColor.BLACK && gameData.whiteUsername() == null) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                return;
+            }
+
+            // Validate it's this player's turn
             if (gameData.game().getTeamTurn() != playerTeam) {
                 sessionManager.sendToUser(ctx, new ErrorMessage("Error: It is not your turn"));
                 return;
@@ -457,6 +476,25 @@ public class Server {
                 sessionManager.sendToUser(ctx, new ErrorMessage("Error: Only players can resign"));
                 return;
             }
+
+            // Check if game is already over (opponent has already resigned)
+            if ((username.equals(gameData.whiteUsername()) && gameData.blackUsername() == null) ||
+                (username.equals(gameData.blackUsername()) && gameData.whiteUsername() == null)) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is already over"));
+                return;
+            }
+
+            // Mark player as resigned by setting their username to null
+            if (username.equals(gameData.whiteUsername())) {
+                gameData = new GameData(gameData.gameID(), null, gameData.blackUsername(),
+                                       gameData.gameName(), gameData.game());
+            } else {
+                gameData = new GameData(gameData.gameID(), gameData.whiteUsername(), null,
+                                       gameData.gameName(), gameData.game());
+            }
+            
+            // Update game in database
+            dataAccess.updateGame(gameData);
 
             // Broadcast resignation notification
             NotificationMessage resignNotif = new NotificationMessage(username + " resigned");
