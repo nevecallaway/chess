@@ -34,6 +34,7 @@ import websocket.messages.LoadGameMessage;
 import model.AuthData;
 import model.GameData;
 import chess.InvalidMoveException;
+import chess.TeamColor;
 import java.util.Map;
 
 public class Server {
@@ -316,22 +317,22 @@ public class Server {
 
     private void handleConnect(WsMessageContext ctx, UserGameCommand command) {
         try {
-            // 1. Validate auth token and get username
+            // Validate auth token and get username
             dataAccess.getAuth(command.getAuthToken());
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             String username = auth.username();
 
-            // 2. Get the game data
+            // Get the game data
             GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
 
-            // 3. Register user in session
+            // Register user in session
             sessionManager.addUserToGame(command.getGameID(), ctx, username, command.getAuthToken());
 
-            // 4. Send LOAD_GAME message to this user
+            // Send LOAD_GAME message to this user
             LoadGameMessage loadGameMessage = new LoadGameMessage(gameData.game());
             sessionManager.sendToUser(ctx, loadGameMessage);
 
-            // 5. Broadcast notification to other users in game
+            // Broadcast notification to other users in game
             String notification;
             if (username.equals(gameData.whiteUsername())) {
                 notification = username + " connected as white";
@@ -350,37 +351,53 @@ public class Server {
 
     private void handleMakeMove(WsMessageContext ctx, UserGameCommand command) {
         try {
-            // 1. Validate move exists
+            // Validate move exists
             if (command.getMove() == null) {
                 sessionManager.sendToUser(ctx, new ErrorMessage("Error: Move not provided"));
                 return;
             }
 
-            // 2. Get auth info and game data
+            // Get auth info and game data
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             String username = auth.username();
             GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
 
-            // 3. Validate player is in this game
+            // Validate player is in this game
             if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
                 sessionManager.sendToUser(ctx, new ErrorMessage("Error: You are not a player in this game"));
                 return;
             }
 
-            // 4. Make the move (this validates and executes it)
+            // Make the move (this validates and executes it)
             gameData.game().makeMove(command.getMove());
 
-            // 5. Update game in database
+            // Update game in database
             dataAccess.updateGame(gameData);
 
-            // 6. Broadcast updated game state to all players
+            // Broadcast updated game state to all players
             LoadGameMessage loadGameMessage = new LoadGameMessage(gameData.game());
             sessionManager.broadcastToGame(command.getGameID(), loadGameMessage);
 
-            // 7. Send move notification
+            // Send move notification
             String moveNotification = username + " made a move";
             NotificationMessage moveNotif = new NotificationMessage(moveNotification);
             sessionManager.broadcastToGameExcept(command.getGameID(), moveNotif, ctx);
+
+            // Check for check/checkmate/stalemate
+            TeamColor currentTeam = gameData.game().getTeamTurn();
+            if (gameData.game().isInCheckmate(currentTeam)) {
+                String checkmateName = currentTeam == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+                NotificationMessage checkmateNotif = new NotificationMessage(checkmateName + " is in checkmate");
+                sessionManager.broadcastToGame(command.getGameID(), checkmateNotif);
+            } else if (gameData.game().isInCheck(currentTeam)) {
+                String checkName = currentTeam == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+                NotificationMessage checkNotif = new NotificationMessage(checkName + " is in check");
+                sessionManager.broadcastToGame(command.getGameID(), checkNotif);
+            } else if (gameData.game().isInStalemate(currentTeam)) {
+                String stalemateName = currentTeam == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+                NotificationMessage stalemateNotif = new NotificationMessage(stalemateName + " is in stalemate");
+                sessionManager.broadcastToGame(command.getGameID(), stalemateNotif);
+            }
 
         } catch (DataAccessException e) {
             sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
@@ -390,12 +407,12 @@ public class Server {
     }
 
     private void handleLeave(WsMessageContext ctx, UserGameCommand command) {
-        // TODO: Implement LEAVE handler
+        // Implement LEAVE handler
         sessionManager.sendToUser(ctx, new ErrorMessage("Error: LEAVE not yet implemented"));
     }
 
     private void handleResign(WsMessageContext ctx, UserGameCommand command) {
-        // TODO: Implement RESIGN handler
+        // Implement RESIGN handler
         sessionManager.sendToUser(ctx, new ErrorMessage("Error: RESIGN not yet implemented"));
     }
 
