@@ -47,16 +47,10 @@ public class Server {
     private final Gson gson = new Gson();
 
     public Server() {
-        DataAccess dataAccess;
-        try {
-            DatabaseManager.createDatabase();
-            dataAccess = new MySQLDataAccess();
-        } catch (DataAccessException ex) {
-            System.err.println("Warning: Could not initialize MySQL database, using in-memory storage");
-            ex.printStackTrace();
-            dataAccess = new MemoryDataAccess();
-        }
-        this.dataAccess = dataAccess;
+        // Default to MemoryDataAccess (like PetShop example)
+        this.dataAccess = new MemoryDataAccess();
+        System.out.println("DEBUG: Using MemoryDataAccess");
+        
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);
@@ -368,8 +362,19 @@ public class Server {
                 return;
             }
 
+            // Validate it's this player's turn
+            TeamColor playerTeam = username.equals(gameData.whiteUsername()) ? TeamColor.WHITE : TeamColor.BLACK;
+            if (gameData.game().getTeamTurn() != playerTeam) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: It is not your turn"));
+                return;
+            }
+
             // Make the move (this validates and executes it)
             gameData.game().makeMove(command.getMove());
+
+            // Create a new GameData to ensure the update is persisted
+            gameData = new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(),
+                                   gameData.gameName(), gameData.game());
 
             // Update game in database
             dataAccess.updateGame(gameData);
