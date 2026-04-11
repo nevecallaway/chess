@@ -33,6 +33,7 @@ import websocket.messages.NotificationMessage;
 import websocket.messages.LoadGameMessage;
 import model.AuthData;
 import model.GameData;
+import chess.InvalidMoveException;
 import java.util.Map;
 
 public class Server {
@@ -348,8 +349,44 @@ public class Server {
     }
 
     private void handleMakeMove(WsMessageContext ctx, UserGameCommand command) {
-        // TODO: Implement MAKE_MOVE handler
-        sessionManager.sendToUser(ctx, new ErrorMessage("Error: MAKE_MOVE not yet implemented"));
+        try {
+            // 1. Validate move exists
+            if (command.getMove() == null) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Move not provided"));
+                return;
+            }
+
+            // 2. Get auth info and game data
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            String username = auth.username();
+            GameData gameData = gameService.getGameData(command.getAuthToken(), command.getGameID());
+
+            // 3. Validate player is in this game
+            if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
+                sessionManager.sendToUser(ctx, new ErrorMessage("Error: You are not a player in this game"));
+                return;
+            }
+
+            // 4. Make the move (this validates and executes it)
+            gameData.game().makeMove(command.getMove());
+
+            // 5. Update game in database
+            dataAccess.updateGame(gameData);
+
+            // 6. Broadcast updated game state to all players
+            LoadGameMessage loadGameMessage = new LoadGameMessage(gameData.game());
+            sessionManager.broadcastToGame(command.getGameID(), loadGameMessage);
+
+            // 7. Send move notification
+            String moveNotification = username + " made a move";
+            NotificationMessage moveNotif = new NotificationMessage(moveNotification);
+            sessionManager.broadcastToGameExcept(command.getGameID(), moveNotif, ctx);
+
+        } catch (DataAccessException e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        } catch (Exception e) {
+            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+        }
     }
 
     private void handleLeave(WsMessageContext ctx, UserGameCommand command) {
