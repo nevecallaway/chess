@@ -6,16 +6,19 @@ import java.util.Scanner;
 import service.result.*;
 import chess.ChessGame;
 import ui.ChessBoardUI;
+import ui.GameplayUI;
 
 public class ChessClient {
     private String username = null;
     private String authToken = null;
     private final ServerFacade server;
+    private final String serverUrl;
     private State state = State.PRELOGIN;
     private List<GameInfo> gamesList = List.of();
 
     public ChessClient(String serverUrl) throws Exception {
         try {
+            this.serverUrl = serverUrl;
             String[] parts = serverUrl.split(":");
             int port = Integer.parseInt(parts[parts.length - 1]);
             this.server = new ServerFacade(port);
@@ -207,16 +210,26 @@ public class ChessClient {
             
             server.joinGame(authToken, color, game.gameID());
             
-            // Display the initial board
-            ChessGame chessGame = new ChessGame();
-            System.out.println("\nGame: " + game.gameName());
-            if (color.equals("WHITE")) {
-                ChessBoardUI.displayBoardWhitePerspective(chessGame);
-            } else {
-                ChessBoardUI.displayBoardBlackPerspective(chessGame);
+            // Start WebSocket gameplay
+            try {
+                System.out.println("\nGame: " + game.gameName());
+                System.out.println("Connecting to game...");
+                
+                WebSocketManager wsManager = new WebSocketManager();
+                wsManager.connect(serverUrl);
+                wsManager.connect(authToken, game.gameID());
+                
+                Scanner gameScanner = new Scanner(System.in);
+                GameplayUI gameplayUI = new GameplayUI(wsManager, gameScanner, username, authToken, 
+                                                       game.gameID(), color);
+                gameplayUI.run();
+                
+                wsManager.disconnect();
+            } catch (Exception e) {
+                System.out.println("Error during gameplay: " + e.getMessage());
             }
-            System.out.println("(Gameplay coming in Phase 6)\n");
-            return String.format("Joined game %d as %s.\n\nType 'back' to return to menu.\n", game.gameID(), color);
+            
+            return "\nReturned to menu.\n";
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
@@ -250,12 +263,26 @@ public class ChessClient {
 
             GameInfo game = gamesList.get(gameNumber);
             
-            // Display the board from white's perspective (observer view)
-            ChessGame chessGame = new ChessGame();
-            System.out.println("\nObserving: " + game.gameName());
-            ChessBoardUI.displayBoardWhitePerspective(chessGame);
-            System.out.println("(Gameplay coming in Phase 6)\n");
-            return String.format("Observing game %d.\n\nType 'back' to return to menu.\n", game.gameID());
+            // Start WebSocket gameplay as observer
+            try {
+                System.out.println("\nObserving: " + game.gameName());
+                System.out.println("Connecting to game as observer...");
+                
+                WebSocketManager wsManager = new WebSocketManager();
+                wsManager.connect(serverUrl);
+                wsManager.connect(authToken, game.gameID());
+                
+                Scanner gameScanner = new Scanner(System.in);
+                GameplayUI gameplayUI = new GameplayUI(wsManager, gameScanner, username, authToken, 
+                                                       game.gameID(), "OBSERVER");
+                gameplayUI.run();
+                
+                wsManager.disconnect();
+            } catch (Exception e) {
+                System.out.println("Error during observation: " + e.getMessage());
+            }
+            
+            return "\nReturned to menu.\n";
         } catch (NumberFormatException ignored) {
             throw new Exception("Game number must be a valid integer.\n");
         } catch (Exception e) {
