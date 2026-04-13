@@ -1,21 +1,20 @@
 package client;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
+import chess.ChessGame;
 import chess.ChessMove;
-
-import org.glassfish.tyrus.client.ClientManager;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Manages WebSocket connection to the Chess server for gameplay communication.
@@ -43,12 +42,16 @@ public class WebSocketManager {
     public void handleMessage(String message) {
         try {
             // Parse the message to determine type
+            JsonObject jsonObject = com.google.gson.JsonParser.parseString(message).getAsJsonObject();
             ServerMessage serverMessage = gson.fromJson(message, ServerMessage.class);
             
             if (serverMessage != null && serverMessage.getServerMessageType() != null) {
                 switch (serverMessage.getServerMessageType()) {
                     case LOAD_GAME:
-                        LoadGameMessage loadGameMessage = gson.fromJson(message, LoadGameMessage.class);
+                        // Manually deserialize the game field as ChessGame
+                        JsonElement gameElement = jsonObject.get("game");
+                        ChessGame game = gson.fromJson(gameElement, ChessGame.class);
+                        LoadGameMessage loadGameMessage = new LoadGameMessage(game);
                         notifyLoadGame(loadGameMessage);
                         break;
                     case ERROR:
