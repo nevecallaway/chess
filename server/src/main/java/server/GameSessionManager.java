@@ -104,21 +104,6 @@ public class GameSessionManager {
     }
 
     /**
-     * Get all connected users for a game
-     */
-    public Set<WsContext> getGameSessions(Integer gameID) {
-        return gameSessions.getOrDefault(gameID, new HashSet<>());
-    }
-
-    /**
-     * Check if any users are connected to a game
-     */
-    public boolean hasActiveSessions(Integer gameID) {
-        Set<WsContext> sessions = gameSessions.get(gameID);
-        return sessions != null && !sessions.isEmpty();
-    }
-
-    /**
      * Represents a user in an active game session
      */
     public static class SessionUser {

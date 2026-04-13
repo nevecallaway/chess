@@ -49,27 +49,11 @@ public class Server {
     public Server() {
         // Default to MemoryDataAccess (like PetShop example)
         this.dataAccess = new MemoryDataAccess();
-        
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);
         this.sessionManager = new GameSessionManager(gson);
-
-        javalin = Javalin.create(config -> config.staticFiles.add("web"))
-                .delete("/db", this::clear)
-                .post("/user", this::register)
-                .post("/session", this::login)
-                .delete("/session", this::logout)
-                .post("/game", this::createGame)
-                .get("/game", this::listGames)
-                .put("/game", this::joinGame)
-                .ws("/ws", wsConfig -> {
-                    wsConfig.onConnect(this::onWsConnect);
-                    wsConfig.onMessage(this::onWsMessage);
-                    wsConfig.onClose(this::onWsClose);
-                    wsConfig.onError(this::onWsError);
-                })
-                .exception(DataAccessException.class, this::exceptionHandler);
+        this.javalin = setupJavalin();
     }
 
     public Server(UserService userService, ClearService clearService, GameService gameService, DataAccess dataAccess) {
@@ -78,8 +62,11 @@ public class Server {
         this.clearService = clearService;
         this.gameService = gameService;
         this.sessionManager = new GameSessionManager(gson);
+        this.javalin = setupJavalin();
+    }
 
-        javalin = Javalin.create(config -> config.staticFiles.add("web"))
+    private Javalin setupJavalin() {
+        return Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", this::clear)
                 .post("/user", this::register)
                 .post("/session", this::login)
