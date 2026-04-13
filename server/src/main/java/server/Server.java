@@ -215,7 +215,12 @@ public class Server {
             ex.printStackTrace(); // Print full stack trace for debugging
         }
         
-        if (ex.getMessage().contains("already exists") || ex.getMessage().contains("player already taken")) {
+        // Database connection errors should always return 500
+        if (errorMessage != null && (errorMessage.contains("failed to") || errorMessage.contains("connection"))) {
+            ctx.status(500);
+            ctx.contentType("application/json");
+            ctx.result(gson.toJson(Map.of("message", "Error: " + ex.getMessage())));
+        } else if (ex.getMessage().contains("already exists") || ex.getMessage().contains("player already taken")) {
             ctx.status(403);
             ctx.contentType("application/json");
             ctx.result(gson.toJson(Map.of("message", "Error: already taken")));

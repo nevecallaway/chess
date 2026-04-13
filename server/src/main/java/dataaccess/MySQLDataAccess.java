@@ -14,6 +14,7 @@ public class MySQLDataAccess implements DataAccess {
     private static final Gson GSON = new Gson();
 
     public MySQLDataAccess() throws DataAccessException {
+        DatabaseManager.createDatabase();
         configureTables();
     }
 
