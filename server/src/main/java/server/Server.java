@@ -75,7 +75,6 @@ public class Server {
                 .get("/game", this::listGames)
                 .put("/game", this::joinGame)
                 .ws("/ws", wsConfig -> {
-                    wsConfig.onConnect(this::onWsConnect);
                     wsConfig.onMessage(this::onWsMessage);
                     wsConfig.onClose(this::onWsClose);
                     wsConfig.onError(this::onWsError);
@@ -239,13 +238,6 @@ public class Server {
         }
     }
 
-    // WebSocket Handlers
-
-    private void onWsConnect(WsConnectContext ctx) {
-        // For now, just accept the connection
-        // The actual CONNECT command will be handled in onWsMessage
-    }
-
     private void onWsMessage(WsMessageContext ctx) {
         try {
             UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
@@ -297,8 +289,6 @@ public class Server {
 
     private void handleConnect(WsMessageContext ctx, UserGameCommand command) {
         try {
-            // Validate auth token and get username
-            dataAccess.getAuth(command.getAuthToken());
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             String username = auth.username();
 
