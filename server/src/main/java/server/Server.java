@@ -47,8 +47,16 @@ public class Server {
     private final Gson gson = new Gson();
 
     public Server() {
-        // Default to MemoryDataAccess (like PetShop example)
-        this.dataAccess = new MemoryDataAccess();
+        // Try to use MySQLDataAccess first, fall back to MemoryDataAccess
+        DataAccess dataAccessImpl;
+        try {
+            dataAccessImpl = new MySQLDataAccess();
+        } catch (DataAccessException e) {
+            System.out.println("MySQL not available, using MemoryDataAccess: " + e.getMessage());
+            dataAccessImpl = new MemoryDataAccess();
+        }
+        this.dataAccess = dataAccessImpl;
+        
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);
