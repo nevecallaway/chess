@@ -96,7 +96,7 @@ public class GameplayUI implements WebSocketManager.ServerMessageListener {
         System.out.println("  help              - Display this help text");
         System.out.println("  redraw            - Redraw the chess board");
         System.out.println("  move <from> <to>  - Make a move (e.g., 'move e2 e4')");
-        System.out.println("  highlight <pos>   - Show legal moves for piece at position (e.g., 'highlight e2')");
+        System.out.println("  highlight <pos>   - Show legal moves for any piece (e.g., 'highlight e2')");
         System.out.println("  resign            - Resign from the game");
         System.out.println("  leave             - Leave the game");
     }
@@ -166,6 +166,7 @@ public class GameplayUI implements WebSocketManager.ServerMessageListener {
 
     /**
      * Handle highlight legal moves command.
+     * Shows legal moves for any piece on the board (own or opponent).
      */
     private void handleHighlight(String[] tokens) {
         if (currentGame == null) {
@@ -181,15 +182,25 @@ public class GameplayUI implements WebSocketManager.ServerMessageListener {
 
         try {
             ChessPosition position = parsePosition(tokens[1]);
-            Collection<ChessMove> validMoves = currentGame.validMoves(position);
+            ChessPiece piece = currentGame.getBoard().getPiece(position);
 
-            if (validMoves == null || validMoves.isEmpty()) {
-                System.out.println("No piece at that position or no legal moves available");
+            if (piece == null) {
+                System.out.println("No piece at position " + tokens[1]);
                 return;
             }
 
-            // Display board with highlighted squares
-            System.out.println("\nHighlighting legal moves for " + tokens[1] + ":");
+            // Get valid moves for the piece (works for any piece)
+            Collection<ChessMove> validMoves = currentGame.validMoves(position);
+
+            if (validMoves == null || validMoves.isEmpty()) {
+                System.out.println("No legal moves available for the piece at " + tokens[1]);
+                return;
+            }
+
+            // Display piece info and legal moves
+            String colorStr = piece.getTeamColor().toString();
+            String typeStr = piece.getPieceType().toString();
+            System.out.println("\nHighlighting moves for " + colorStr + " " + typeStr + " at " + tokens[1] + ":");
             displayBoardWithHighlights(position, validMoves);
 
         } catch (IllegalArgumentException e) {
@@ -201,11 +212,34 @@ public class GameplayUI implements WebSocketManager.ServerMessageListener {
      * Display board with highlighted squares for valid moves.
      */
     private void displayBoardWithHighlights(ChessPosition piecePos, Collection<ChessMove> validMoves) {
-        // This is a local operation - just display the board with markers
-        System.out.println("Piece position: " + positionToString(piecePos));
-        System.out.println("Legal moves:");
+        String colorStr = currentGame.getBoard().getPiece(piecePos).getTeamColor().toString();
+        String typeStr = currentGame.getBoard().getPiece(piecePos).getPieceType().toString();
+        System.out.println("\nHighlighting legal moves for " + colorStr + " " + typeStr + " at " + positionToString(piecePos) + ":");
+        
+        // Display board with visual highlights
+        if (playerColor.equals("BLACK")) {
+            ChessBoardUI.displayBoardWithHighlightsBlackPerspective(currentGame, piecePos, validMoves);
+        } else {
+            ChessBoardUI.displayBoardWithHighlightsWhitePerspective(currentGame, piecePos, validMoves);
+        }
+        
+        // Also display the destinations as a list for reference
+        System.out.println("Legal destination squares:");
         for (ChessMove move : validMoves) {
-            System.out.println("  → " + positionToString(move.getEndPosition()));
+            System.out.print("  → " + positionToString(move.getEndPosition()));
+            
+            // Check if destination has an opponent piece
+            ChessPiece targetPiece = currentGame.getBoard().getPiece(move.getEndPosition());
+            if (targetPiece != null) {
+                System.out.print(" (captures " + targetPiece.getTeamColor() + " " + targetPiece.getPieceType() + ")");
+            }
+            
+            // Check if this is a promotion move
+            if (move.getPromotionPiece() != null) {
+                System.out.print(" (promotes to " + move.getPromotionPiece() + ")");
+            }
+            
+            System.out.println();
         }
     }
 

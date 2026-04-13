@@ -35,6 +35,8 @@ import model.AuthData;
 import model.GameData;
 import chess.InvalidMoveException;
 import chess.ChessGame.TeamColor;
+import chess.ChessMove;
+import chess.ChessPosition;
 import java.util.Map;
 
 public class Server {
@@ -197,7 +199,7 @@ public class Server {
             UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
 
             if (command == null || command.getAuthToken() == null || command.getGameID() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Invalid command format"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Invalid command format"));
                 return;
             }
 
@@ -215,12 +217,12 @@ public class Server {
                     handleResign(ctx, command);
                     break;
                 default:
-                    sessionManager.sendToUser(ctx, new ErrorMessage("Error: Unknown command type"));
+                    sessionManager.sendToUser(ctx, new ErrorMessage("Unknown command type"));
             }
         } catch (Exception e) {
             System.err.println("WebSocket message error: " + e.getMessage());
             e.printStackTrace();
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         }
     }
 
@@ -277,7 +279,7 @@ public class Server {
         try {
             // Validate move exists
             if (command.getMove() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Move not provided"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Move not provided"));
                 return;
             }
 
@@ -288,34 +290,34 @@ public class Server {
 
             // Validate player is in this game
             if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: You are not a player in this game"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("You are not a player in this game"));
                 return;
             }
 
             // Check if game is already over (player resigned/left)
             if (username.equals(gameData.whiteUsername()) && gameData.whiteUsername() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Game is finished"));
                 return;
             }
             if (username.equals(gameData.blackUsername()) && gameData.blackUsername() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Game is finished"));
                 return;
             }
             
             // Check if opponent has resigned (opponent's slot is null)
             TeamColor playerTeam = username.equals(gameData.whiteUsername()) ? TeamColor.WHITE : TeamColor.BLACK;
             if (playerTeam == TeamColor.WHITE && gameData.blackUsername() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Game is finished"));
                 return;
             }
             if (playerTeam == TeamColor.BLACK && gameData.whiteUsername() == null) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is finished"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Game is finished"));
                 return;
             }
 
             // Validate it's this player's turn
             if (gameData.game().getTeamTurn() != playerTeam) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: It is not your turn"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("It is not your turn"));
                 return;
             }
 
@@ -333,8 +335,9 @@ public class Server {
             LoadGameMessage loadGameMessage = new LoadGameMessage(gameData.game());
             sessionManager.broadcastToGame(command.getGameID(), loadGameMessage);
 
-            // Send move notification
-            String moveNotification = username + " made a move";
+            // Send move notification with move description
+            String moveDescription = moveToAlgebraic(command.getMove());
+            String moveNotification = username + " moved " + moveDescription;
             NotificationMessage moveNotif = new NotificationMessage(moveNotification);
             sessionManager.broadcastToGameExcept(command.getGameID(), moveNotif, ctx);
 
@@ -355,9 +358,9 @@ public class Server {
             }
 
         } catch (DataAccessException e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         } catch (Exception e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         }
     }
 
@@ -389,9 +392,9 @@ public class Server {
             sessionManager.broadcastToGame(command.getGameID(), leaveNotif);
 
         } catch (DataAccessException e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         } catch (Exception e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         }
     }
 
@@ -404,14 +407,14 @@ public class Server {
 
             // Validate player is actually in the game (not an observer)
             if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Only players can resign"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Only players can resign"));
                 return;
             }
 
             // Check if game is already over (opponent has already resigned)
             if ((username.equals(gameData.whiteUsername()) && gameData.blackUsername() == null) ||
                 (username.equals(gameData.blackUsername()) && gameData.whiteUsername() == null)) {
-                sessionManager.sendToUser(ctx, new ErrorMessage("Error: Game is already over"));
+                sessionManager.sendToUser(ctx, new ErrorMessage("Game is already over"));
                 return;
             }
 
@@ -432,10 +435,32 @@ public class Server {
             sessionManager.broadcastToGame(command.getGameID(), resignNotif);
 
         } catch (DataAccessException e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         } catch (Exception e) {
-            sessionManager.sendToUser(ctx, new ErrorMessage("Error: " + e.getMessage()));
+            sessionManager.sendToUser(ctx, new ErrorMessage(e.getMessage()));
         }
+    }
+
+    /**
+     * Convert a ChessMove to algebraic notation (e.g., "a2 to a4").
+     */
+    private String moveToAlgebraic(ChessMove move) {
+        String from = positionToAlgebraic(move.getStartPosition());
+        String to = positionToAlgebraic(move.getEndPosition());
+        String notation = from + " to " + to;
+        if (move.getPromotionPiece() != null) {
+            notation += " (" + move.getPromotionPiece() + ")";
+        }
+        return notation;
+    }
+
+    /**
+     * Convert a ChessPosition to algebraic notation (e.g., "a2").
+     */
+    private String positionToAlgebraic(chess.ChessPosition position) {
+        char col = (char) ('a' + (position.getColumn() - 1));
+        int row = position.getRow();
+        return "" + col + row;
     }
 
     public int run(int port) {

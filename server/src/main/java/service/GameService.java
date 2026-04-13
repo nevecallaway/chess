@@ -56,12 +56,12 @@ public class GameService {
         GameData game = dataAccess.getGame(request.gameID());
 
         if (request.playerColor().equals("WHITE")) {
-            if (game.whiteUsername() != null) {
+            if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
                 throw new DataAccessException("White player already taken");
             }
             game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
         } else if (request.playerColor().equals("BLACK")) {
-            if (game.blackUsername() != null) {
+            if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
                 throw new DataAccessException("Black player already taken");
             }
             game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
