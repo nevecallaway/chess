@@ -276,12 +276,10 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     private String serializeGame(ChessGame game) {
-        // Store minimal representation since board isn't used after creation
-        return "{\"version\":1}";
+        return GSON.toJson(game);
     }
 
     private ChessGame deserializeGame(String gameJson) {
-        // Always return a fresh game - tests don't verify board state
-        return new ChessGame();
+        return GSON.fromJson(gameJson, ChessGame.class);
     }
 }

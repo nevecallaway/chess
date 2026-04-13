@@ -47,21 +47,21 @@ public class Server {
     private final Gson gson = new Gson();
 
     public Server() {
-        // Try to use MySQLDataAccess first, fall back to MemoryDataAccess
-        DataAccess dataAccessImpl;
-        try {
-            dataAccessImpl = new MySQLDataAccess();
-        } catch (DataAccessException e) {
-            System.out.println("MySQL not available, using MemoryDataAccess: " + e.getMessage());
-            dataAccessImpl = new MemoryDataAccess();
-        }
-        this.dataAccess = dataAccessImpl;
-        
+        this.dataAccess = initializeDataAccess();
         this.userService = new UserService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.gameService = new GameService(dataAccess);
         this.sessionManager = new GameSessionManager(gson);
         this.javalin = setupJavalin();
+    }
+
+    private DataAccess initializeDataAccess() {
+        try {
+            return new MySQLDataAccess();
+        } catch (DataAccessException e) {
+            System.out.println("MySQL not available, using MemoryDataAccess: " + e.getMessage());
+            return new MemoryDataAccess();
+        }
     }
 
     public Server(UserService userService, ClearService clearService, GameService gameService, DataAccess dataAccess) {
